@@ -1,7 +1,6 @@
 import axios from 'axios';
 import React, { useState,useEffect }  from 'react';
 import NewUser from './NewUser';
-import NewUserModal from './NewUserModal';
 import Search from './Search';
 
 export default function Franchises(){
@@ -15,7 +14,10 @@ export default function Franchises(){
             "website": "www.centreofinovation.com",
             "email": "info@centreofinnovation.com",
             "phone": "+971 7012717483",
-            "api_access": 1
+            "api_access": 1,
+            "users_registered": 7,
+            "codes_generated": 9,
+            "user_completed": 6
         },
         {
             "franchiseCode": "FRMIA_2",
@@ -26,7 +28,10 @@ export default function Franchises(){
             "website": "www.deseoconnect.com",
             "email": "info@deseoconnect.com",
             "phone": "+91 9744883288",
-            "api_access": 0
+            "api_access": 0,
+            "users_registered": 0,
+            "codes_generated": 5,
+            "user_completed": 0
         }
     ])
     const [modalContent, setModalContent]= useState(franchises[0])
@@ -238,19 +243,31 @@ export default function Franchises(){
                     :
                     <table class="table table-striped table-hover">
                     <thead>
-                        <tr><td>Code:</td><td><b>{modalContent.franchiseCode}</b></td></tr>
-                        <tr><td> Admin:</td><td><b>{modalContent.client_name}</b></td></tr>
-                        <tr><td>Designation:</td><td><b>{modalContent.designation}</b></td></tr>
-                        <tr><td>Address: </td><td><b>{modalContent.address}</b></td></tr>
-                        <tr><td>Website:</td><td><a href={modalContent.website} target="_blank">{modalContent.website}</a></td></tr>
-                        <tr><td>Email:  </td><td><a href={"mailto:"+modalContent.email}>{modalContent.email}</a></td></tr>
-                        <tr><td>Phone:</td><td><a href={"tel:"+modalContent.phone}>{modalContent.phone}</a></td></tr>
+                        <tr><td className='text-center'>Code:</td><td><b>{modalContent.franchiseCode}</b></td></tr>
+                        <tr><td className='text-center'> Admin:</td><td><b>{modalContent.client_name}</b></td></tr>
+                        <tr><td className='text-center'>Designation:</td><td><b>{modalContent.designation}</b></td></tr>
+                        <tr><td className='text-center'>Address: </td><td><b>{modalContent.address}</b></td></tr>
+                        <tr><td className='text-center'>Website:</td><td><a href={modalContent.website} target="_blank">{modalContent.website}</a></td></tr>
+                        <tr><td className='text-center'>Email:  </td><td><a href={"mailto:"+modalContent.email}>{modalContent.email}</a></td></tr>
+                        <tr><td className='text-center'>Phone:</td><td><a href={"tel:"+modalContent.phone}>{modalContent.phone}</a></td></tr>
+                        <tr><td className='text-center'>Codes</td><td><b>{modalContent.codes_generated}</b></td></tr>
+                        <tr><td className='text-center text-secondary'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
+                                <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                            </svg><br/>
+                             Users</td><td><b>{modalContent.users_registered}</b></td></tr>
+                        <tr><td className='text-center text-success'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-check-fill" viewBox="0 0 16 16">
+                                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zm1.354 4.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708.708z"/>
+                            </svg><br/>
+                            Reports</td><td><b>{modalContent.user_completed}</b></td></tr>
                     </thead>
                     </table>
                     }
                     
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger me-auto">Revoke</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onClick={() =>{ setEdit(false)}}>Close</button>
                     { edit? 
                     
