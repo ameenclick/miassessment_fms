@@ -1,7 +1,7 @@
 import { useState }  from 'react';
 import dynamic from 'next/dynamic';
-const Footer = dynamic(() => import('../components/footer'));
-const MyHead = dynamic(() => import('../components/WebHead'));
+import Footer from '../components/footer';
+import MyHead from '../components/WebHead';
 
 export default function SignIn(){
     const [email, setEmail] = useState("");
@@ -20,7 +20,7 @@ export default function SignIn(){
                         <form className='form' method='post'>
                         <h5>Signin</h5>
                             <div className="mb-1">
-                                <label for="staticEmail" className="col-form-label">Email</label>
+                                <label htmlFor="staticEmail" className="col-form-label">Email</label>
                                 <div className="col">
                                     <input type="email" placeholder='Enter your email..' onInput={(e) =>{ setEmail(e.target.value)} } value={email} className="form-control form-control-lg" id="staticEmail" required autoFocus/>
                                 </div>

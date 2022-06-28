@@ -8,7 +8,7 @@ export default function NewUserModal(){
     const [process, setProcess] = useState(false)
     return(
         <>
-        <div class="modal fade" id="newUserModal" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
+        <div class="modal fade" id="newUserModal" tabIndex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
             <div class="modal-header">

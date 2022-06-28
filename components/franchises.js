@@ -3,38 +3,9 @@ import React, { useState,useEffect }  from 'react';
 import NewUser from './NewUser';
 import Search from './Search';
 
-export default function Franchises(){
-    const [franchises, setFranchises] = useState([
-        {
-            "franchiseCode": "MI_APP",
-            "client_name": "Paul Maliekkal",
-            "company": "Centre Of Innovation",
-            "designation": "Academician",
-            "address": "MNRA 158 , KOCHI 33, INDIA",
-            "website": "www.centreofinovation.com",
-            "email": "info@centreofinnovation.com",
-            "phone": "+971 7012717483",
-            "api_access": 1,
-            "users_registered": 7,
-            "codes_generated": 9,
-            "user_completed": 6
-        },
-        {
-            "franchiseCode": "FRMIA_2",
-            "client_name": "Sajid M",
-            "company": "Deseo Connect Private Ltd",
-            "designation": "Executive Director",
-            "address": "Deseo Connect Private Ltd Third Floor MTI Complex Chungam West Hill, Calicut -673005",
-            "website": "www.deseoconnect.com",
-            "email": "info@deseoconnect.com",
-            "phone": "+91 9744883288",
-            "api_access": 0,
-            "users_registered": 0,
-            "codes_generated": 5,
-            "user_completed": 0
-        }
-    ])
-    const [modalContent, setModalContent]= useState(franchises[0])
+export default function Franchises(props){
+    const [franchises, setFranchises] = useState(props.franchises)
+    const [modalContent, setModalContent]= useState(props.franchises[0])
     const [edit, setEdit]=useState(false)
     const [company,setCompany]=useState()
     const [admin, setAdmin]=useState()
@@ -50,16 +21,27 @@ export default function Franchises(){
     const [logo, setLogo] = useState('');
     const [filename, setFilename] = useState('Choose File')
 
-    const makeChage = () =>{
-        setEdit(true);
-        setCompany(modalContent.company)
-        setAdmin(modalContent.client_name)
-        setDesignation(modalContent.designation)
-        setAddress(modalContent.address)
-        setWebsite(modalContent.website)
-        setEmail(modalContent.email)
-        setPhone(modalContent.phone)
-    }
+    useEffect(() => console.log(franchises))
+
+    useEffect(() => {
+        if(modalContent)
+        {
+            setCompany(modalContent.company)
+            setAdmin(modalContent.client_name)
+            setDesignation(modalContent.designation)
+            setAddress(modalContent.address)
+            setWebsite(modalContent.website)
+            setEmail(modalContent.email)
+            setPhone(modalContent.phone)
+        }
+    }, [modalContent])
+
+    useEffect(() => {
+        if(franchises.length != 0)
+        {
+            setModalContent(franchises[0])
+        } 
+    }, [franchises])
 
     const saveChange = () => {
         var Temp = franchises
@@ -138,157 +120,169 @@ export default function Franchises(){
                     </button>
                 </div>
                 <hr/>
-                <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Code</th>
-                        <th scope="col">Client Name</th>
-                        <th scope="col">Company</th>
-                        <th className='text-center'>
-                            Users
-                        </th>
-                        <th className='text-center'>Codes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    { franchises.map((franchise, i) => 
-                        <tr>
-                        <th scope="row">{i + 1}</th>
-                        <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i)}}>{franchise.franchiseCode}</td>
-                        <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i)}}>{franchise.client_name}</td>
-                        <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i)}}>{franchise.company}</td>
-                        <td className='text-center'>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-square" viewBox="0 0 16 16">
-                                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                            </svg>
-                        </td>
-                        <td className='text-center'>
-                            0
-                        </td>
-                        </tr>
-                    )}
-                    
-                </tbody>
-                </table>
-            </div>
-            {/* Details Modal */}
-            <div class="modal fade" id="franchiseDetails" tabindex="-1" aria-labelledby="franchiseDetailsLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">{edit ? "Edit Details for "+modalContent.franchiseCode:modalContent.company}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={() => setEdit(false)}></button>
-                </div>
-                <div class="modal-body">
-                    { edit ? 
-                    <div>
-                    <div className='row'>
-                        <div className='col'>
-                            <label>
-                                Organisation
-                            </label>
-                            <input name="company" type="text" className='form-control form-control-lg mb-3' placeholder="Enter name of  organisation" value={company} onChange={(e) => setCompany(e.target.value)}/>
+                { franchises == []? 
+                        <div className="d-flex justify-content-center m-5 p-5">
+                        <div className="spinner-border" role="status">
+                          <span className="visually-hidden">Loading...</span>
                         </div>
-                    </div>
-                    <div className='row'>
-                        <div className='col'>
-                            <label>
-                                Administrator
-                            </label>
-                            <input name="admin" value={admin} onChange={(e) => setAdmin(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change username"/>
+                      </div>
+                :
+
+                        <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Code</th>
+                                <th scope="col">Client Name</th>
+                                <th scope="col">Company</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            { franchises.map((franchise, i) => 
+                                <tr>
+                                <th scope="row">{i + 1}</th>
+                                <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i);}}>{franchise.franchiseCode}</td>
+                                <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i);}}>{franchise.client_name}</td>
+                                <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i);}}>{franchise.company}</td>
+                                </tr>
+                            )}
                             
-                        </div>
-                        <div className='col'>
-                            <label>
-                                Designation
-                            </label>
-                            <input name="designation" value={designation} onChange={(e) => setDesignation(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change designation"/>
-                        </div>
+                        </tbody>
+                        </table>
+                }
+                
+            </div>
+            {franchises.length == 0? "" :
+              /* Details Modal */
+                <div class="modal fade" id="franchiseDetails" tabindex="-1" aria-labelledby="franchiseDetailsLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">{edit ? "Edit Details for "+modalContent.franchiseCode:modalContent.company}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={() => setEdit(false)}></button>
                     </div>
-                    <div className='row'>
-                        <div className='col'>
-                            <label>
-                                Address
-                            </label>
-                            <textarea name="address" value={address} onChange={(e) => setAddress(e.target.value)} className='form-control form-control-lg mb-3' placeholder="Change address"></textarea>
-                        </div>
-                    </div>
-                    <div className='row'>
-                        <div className='col'>
-                            <label>
-                                Phone
-                            </label>
-                            <input name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change phone"/>
-                        </div>
-                    </div>
-                    <div className='row'>
-                        <div className='col'>
-                            <label>
-                                Email
-                            </label>
-                            <input name="email" value={email} onChange={(e) => setEmail(e.target.value)} type="email" className='form-control form-control-lg mb-3' placeholder="Change email"/>
-                        </div>
-                    </div>
-                    <div className='row'>
-                        <div className='col'>
+                    <div class="modal-body">
+                        {
+                        edit ? 
+                        <div>
+                        <div className='row'>
+                            <div className='col'>
                                 <label>
-                                    Website
+                                    Organisation
                                 </label>
-                                <input name="website" value={website} onChange={(e) => setWebsite(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change website"/>
+                                <input name="company" type="text" className='form-control form-control-lg mb-3' placeholder="Enter name of  organisation" value={company} onChange={(e) => setCompany(e.target.value)}/>
                             </div>
                         </div>
+                        <div className='row'>
+                            <div className='col'>
+                                <label>
+                                    Administrator
+                                </label>
+                                <input name="admin" value={admin} onChange={(e) => setAdmin(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change username"/>
+                                
+                            </div>
+                            <div className='col'>
+                                <label>
+                                    Designation
+                                </label>
+                                <input name="designation" value={designation} onChange={(e) => setDesignation(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change designation"/>
+                            </div>
+                        </div>
+                        <div className='row'>
+                            <div className='col'>
+                                <label>
+                                    Address
+                                </label>
+                                <textarea name="address" value={address} onChange={(e) => setAddress(e.target.value)} className='form-control form-control-lg mb-3' placeholder="Change address"></textarea>
+                            </div>
+                        </div>
+                        <div className='row'>
+                            <div className='col'>
+                                <label>
+                                    Phone
+                                </label>
+                                <input name="phone" value={phone} onChange={(e) => setPhone(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change phone"/>
+                            </div>
+                        </div>
+                        <div className='row'>
+                            <div className='col'>
+                                <label>
+                                    Email
+                                </label>
+                                <input name="email" value={email} onChange={(e) => setEmail(e.target.value)} type="email" className='form-control form-control-lg mb-3' placeholder="Change email"/>
+                            </div>
+                        </div>
+                        <div className='row'>
+                            <div className='col'>
+                                    <label>
+                                        Website
+                                    </label>
+                                    <input name="website" value={website} onChange={(e) => setWebsite(e.target.value)} type="text" className='form-control form-control-lg mb-3' placeholder="Change website"/>
+                                </div>
+                            </div>
+                        </div>
+                        :
+                        <table class="table table-striped table-hover">
+                        <thead>
+                            <tr><td>Code:</td><td colSpan={2}><b>{modalContent.franchiseCode}</b></td></tr>
+                            <tr><td> Admin:</td><td colSpan={2}><b>{modalContent.client_name}</b></td></tr>
+                            <tr><td>Designation:</td><td colSpan={2}><b>{modalContent.designation}</b></td></tr>
+                            <tr><td>Address: </td><td colSpan={2}><b>{modalContent.address}</b></td></tr>
+                            <tr><td>Website:</td><td colSpan={2}><a href={modalContent.website} target="_blank">{modalContent.website}</a></td></tr>
+                            <tr><td>Email:  </td><td colSpan={2}><a href={"mailto:"+modalContent.email}>{modalContent.email}</a></td></tr>
+                            <tr><td>Phone:</td><td colSpan={2}><a href={"tel:"+modalContent.phone}>{modalContent.phone}</a></td></tr>
+                            <tr><td className='text-center'>
+                                    <b>{modalContent.codes_generated}</b><br/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                                        <path d="M2 2h2v2H2V2Z"/>
+                                        <path d="M6 0v6H0V0h6ZM5 1H1v4h4V1ZM4 12H2v2h2v-2Z"/>
+                                        <path d="M6 10v6H0v-6h6Zm-5 1v4h4v-4H1Zm11-9h2v2h-2V2Z"/>
+                                        <path d="M10 0v6h6V0h-6Zm5 1v4h-4V1h4ZM8 1V0h1v2H8v2H7V1h1Zm0 5V4h1v2H8ZM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8H6Zm0 0v1H2V8H1v1H0V7h3v1h3Zm10 1h-1V7h1v2Zm-1 0h-1v2h2v-1h-1V9Zm-4 0h2v1h-1v1h-1V9Zm2 3v-1h-1v1h-1v1H9v1h3v-2h1Zm0 0h3v1h-2v1h-1v-2Zm-4-1v1h1v-2H7v1h2Z"/>
+                                        <path d="M7 12h1v3h4v1H7v-4Zm9 2v2h-3v-1h2v-1h1Z"/>
+                                    </svg>  Codes
+                                </td>
+                                <td className='text-center'>
+                                    <b>{modalContent.users_registered}</b><br/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
+                                        <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                                    </svg>  Users
+                                </td>
+                                <td className='text-center'>
+                                    <b>{modalContent.user_completed}</b><br/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-check-fill" viewBox="0 0 16 16">
+                                        <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zm1.354 4.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708.708z"/>
+                                    </svg>  Reports
+                                </td>
+                            </tr>
+                        </thead>
+                        </table>
+                        }
+                        
                     </div>
-                    :
-                    <table class="table table-striped table-hover">
-                    <thead>
-                        <tr><td className='text-center'>Code:</td><td><b>{modalContent.franchiseCode}</b></td></tr>
-                        <tr><td className='text-center'> Admin:</td><td><b>{modalContent.client_name}</b></td></tr>
-                        <tr><td className='text-center'>Designation:</td><td><b>{modalContent.designation}</b></td></tr>
-                        <tr><td className='text-center'>Address: </td><td><b>{modalContent.address}</b></td></tr>
-                        <tr><td className='text-center'>Website:</td><td><a href={modalContent.website} target="_blank">{modalContent.website}</a></td></tr>
-                        <tr><td className='text-center'>Email:  </td><td><a href={"mailto:"+modalContent.email}>{modalContent.email}</a></td></tr>
-                        <tr><td className='text-center'>Phone:</td><td><a href={"tel:"+modalContent.phone}>{modalContent.phone}</a></td></tr>
-                        <tr><td className='text-center'>Codes</td><td><b>{modalContent.codes_generated}</b></td></tr>
-                        <tr><td className='text-center text-secondary'>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
-                                <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816zM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275zM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
-                            </svg><br/>
-                             Users</td><td><b>{modalContent.users_registered}</b></td></tr>
-                        <tr><td className='text-center text-success'>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-file-earmark-check-fill" viewBox="0 0 16 16">
-                                <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zm1.354 4.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708.708z"/>
-                            </svg><br/>
-                            Reports</td><td><b>{modalContent.user_completed}</b></td></tr>
-                    </thead>
-                    </table>
-                    }
-                    
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-danger me-auto">Revoke</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onClick={() =>{ setEdit(false)}}>Close</button>
-                    { edit? 
-                    
-                    <button type="button" class="btn btn-success" onClick={saveChange}  data-bs-dismiss="modal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-square" viewBox="0 0 16 16">
-                            <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
-                            <path d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.235.235 0 0 1 .02-.022z"/>
-                        </svg>  Save
-                    </button>
-                    :
-                    <button type="button" class="btn btn-info" onClick={makeChage}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                        </svg>  Edit
-                    </button>
-                    }    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-danger me-auto">Revoke</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onClick={() =>{ setEdit(false)}}>Close</button>
+                        { edit? 
+                        
+                        <button type="button" class="btn btn-success" onClick={saveChange}  data-bs-dismiss="modal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-square" viewBox="0 0 16 16">
+                                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                                <path d="M10.97 4.97a.75.75 0 0 1 1.071 1.05l-3.992 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.235.235 0 0 1 .02-.022z"/>
+                            </svg>  Save
+                        </button>
+                        :
+                        <button type="button" class="btn btn-info" onClick={() => {setEdit(true);}}>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                            </svg>  Edit
+                        </button>
+                        }    
+                    </div>
+                    </div>
                 </div>
                 </div>
-            </div>
-            </div>
+            }
             {/* Create Modal */}
             <div class="modal fade" id="createFranchise" tabindex="-1" aria-labelledby="createFranchiseLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl">
