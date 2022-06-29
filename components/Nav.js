@@ -19,7 +19,7 @@ function Nav(){
         .then((jsonResponse) => {
             setUsers(jsonResponse.users)
         })
-        fetch("http://ec2-3-111-37-72.ap-south-1.compute.amazonaws.com/api/franchise/details", { method: "GET", headers: {
+        fetch("https://raw.githubusercontent.com/ameenmsit/testJson/main/franchise.json", { method: "GET", headers: {
             'Content-Type': 'application/json',
             'token': "029f46cd2eee78a34d42eee79d44723dbcfb4d2f27956fc97d1920db7ac3644b39345f5c92007eeeabf0ecbeab506b36e9e2b4671dfefd8b874827479a9781e5",
             'authorization': "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiUEFVTFNJUiIsImlhdCI6MTY0OTY0NjgyNX0.BEx1Xz-yEl-0jWzQY0ROvCTL07C7XqHLitJPpupsup0"
