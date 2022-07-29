@@ -10,7 +10,7 @@ const nextConfig = {
             API_TOKEN: process.env.API_TOKEN,
             localHost: process.env.localHost,
             AWS_EC2: process.env.AWS_EC2,
-            host: process.env.localHost,
+            host: process.env.AWS_EC2,
             SECRET_KEY: process.env.SECRET_KEY
       },
     poweredByHeader: false,
