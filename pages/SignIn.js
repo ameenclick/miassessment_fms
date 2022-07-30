@@ -55,6 +55,7 @@ export default function SignIn(){
             } else {
                 message='Login Failed';
             }
+            console.log(err)
             setAlert({ message: message,
                 type: "danger",
                 alert: true})
