@@ -33,7 +33,7 @@ export default function SignIn(){
             const response = await axios.post('login', JSON.stringify({ 'email': email, 'password': password}),
             {
                 headers: { 'Content-Type': 'application/json'},
-                withCredentials: true 
+                withCredentials: false
             })
             const accessToken = response?.data?.accessToken;
             const user = jwtDecode(accessToken)

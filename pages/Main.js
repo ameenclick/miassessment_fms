@@ -79,7 +79,7 @@ function Main(){
     return (
         <>
         <MyHead />
-        {(users && franchises)? 
+        {(users!=undefined && franchises!=undefined)? 
         <div>
             <nav className="navbar navbar-expand-lg navbar-light bg-light">
                 <div className="container">
