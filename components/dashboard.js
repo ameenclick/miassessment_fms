@@ -13,16 +13,19 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
    const axiosPrivate = useAxiosPrivate();
 
    useEffect(() => {
-        axiosPrivate.get(`unsold/codes/${User.franchiseCode}`)
-        .then(res => {
-            setUnsoldCount(res.data.length)
-            setUnsold(res.data)
-        })
-        .catch(error => { 
-            console.error(error.data)
-            setAlertmessage({ message: error.data? error.data:"Something wrong with server, unable to show unsold..", type: "danger"});
-            setAlert(true)
-        })
+        if(Unsold==undefined)
+        {
+            axiosPrivate.get(`unsold/codes/${User.franchiseCode}`)
+            .then(res => {
+                setUnsoldCount(res.data.length)
+                setUnsold(res.data)
+            })
+            .catch(error => { 
+                console.error(error.data)
+                setAlertmessage({ message: error.data? error.data:"Something wrong with server, unable to show unsold..", type: "danger"});
+                setAlert(true)
+            })
+        }
    }, [Unsold])
 
   return (
