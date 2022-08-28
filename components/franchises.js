@@ -106,13 +106,12 @@ export default function Franchises(props){
     }
 
     const uploadImage = () => {
-        console.log(process.env.AWS_BUCKET)
         const s3 = new AWS.S3({
             params: { Bucket: process.env.AWS_BUCKET},
             region: process.env.AWS_REGION,
         })
         const uploadParams = {
-            Key : 'franchises/logos/'+filename,
+            Key : 'franchises/logos/'+Math.floor(Math.random() * 20)+filename,
             Body : logo,
             Bucket : process.env.AWS_BUCKET
           }
@@ -156,11 +155,16 @@ export default function Franchises(props){
                 setAlertmessage({ message: "New franchise created", type: "success"});
                 var temp=[...franchises].concat([response.data])
                 setModalContent({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:""})
+                setLogoSrc("")
+                setlogoLocation("")
                 setFranchises(temp)
         })
         .catch(error => { 
-             console.error(error.message)
-             setAlertmessage({ message: error.response? error.response:"Something wrong with server, try later..", type: "danger"});
+            if(error.response.status == 409)
+            {
+                setAlertmessage({ message: "Duplicate entry...", type: "danger"});
+            }
+            else setAlertmessage({ message: "Something wrong with server, try later..", type: "danger"});
         })
         setAlert(true)
     }
@@ -494,7 +498,7 @@ export default function Franchises(props){
                         </div>
                     </div>     
                         : ""}
-                <form onSubmit={(e) => createFranchiseAccount(e)}>
+                <form onSubmit={(e) =>{createFranchiseAccount(e)}}>
                     <div className="modal-body modal-fullscreen-lg-down p-5">
                             <div className='row'>
                                 <div className='col-lg-4'>
@@ -556,8 +560,8 @@ export default function Franchises(props){
                                             Brand Logo
                                         </label>
                                         <div className='input-group'>
-                                            <input name="logo" type="file" className='form-control form-control-lg' onChange={(e) =>{ setLogo(e.target.files[0]); setFilename(e.target.files[0].name)} } id='customeLogo' accept='.jpeg, .jpg, .png'/>
-                                            <button type='submit' className='btn btn-primary' onClick={uploadImage} disabled={filename? false:true}>
+                                            <input name="logo" type="file" className='form-control form-control-lg' onChange={(e) =>{ setLogo(e.target.files[0]); setFilename(e.target.files[0].name)} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                            <button className='btn btn-primary' onClick={(e) => {e.preventDefault(); uploadImage();}} disabled={filename? false:true}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-upload" viewBox="0 0 16 16">
                                                 <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
                                                 <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
@@ -583,7 +587,7 @@ export default function Franchises(props){
                     </div>
                     <div className="modal-footer">
                         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" className="btn btn-success">
+                        <button className="btn btn-success" type="submit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-bookmark-check-fill" viewBox="0 0 16 16">
                             <path fillRule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zm8.854-9.646a.5.5 0 0 0-.708-.708L7.5 7.793 6.354 6.646a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0l3-3z"/>
                             </svg> Create

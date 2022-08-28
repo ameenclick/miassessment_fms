@@ -43,7 +43,7 @@ function Main(){
                     console.error(err)
                 }
         }
-        getUsers();
+        if(user) getUsers();
         const getFranchises = async () => {
             try {
                 const franchises = await axiosPrivate.get(`franchise/details`, {
