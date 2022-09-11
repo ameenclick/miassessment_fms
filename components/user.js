@@ -4,7 +4,7 @@ import useAxiosPrivate from '../hooks/useAxiosPrivate';
 
 export default function User(props){
     const [users, setUsers]=useState(props.users)
-    const [modalContent, setModalContent]=useState(users[0])
+    const [modalContent, setModalContent]=useState(users?.length>0?users[0]:undefined)
     const [edit, setEdit]=useState(false)
     const [userCode, setusercode]=useState()
     const [name, setName]=useState()
@@ -22,6 +22,7 @@ export default function User(props){
     const [index, setIndex]=useState(0)
     const [alert, setAlert]=useState(false)
     const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
+    const [filter, setFilter] = useState("")
     const axiosPrivate = useAxiosPrivate();
 
     const makeChange = () =>{
@@ -40,6 +41,10 @@ export default function User(props){
         setCountry(modalContent.country)
         setEdit(true);
     }
+
+    useEffect(() => {
+        setUsers(props.users)
+    }, [props.users])
 
     const saveChange = async () => {
         var userTemp=users
@@ -114,14 +119,24 @@ export default function User(props){
                 {
                     users?.length
                     ?
-                    <div className='col-lg-8'>
-                        <Search id={"searchCol"} keyword={"user"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
+                    <div className='col-lg-9'>
+                        <div className="input-group mb-3">
+                            <Search id={"searchCol"} keyword={"user"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
+                            <select className="form-select form-select-lg" onChange={(e) => {setFilter(e.target.value)}} aria-label=".form-select example">
+                                <option defaultValue="">Show all</option>
+                                {
+                                    props.franchises.map((franchise,index) =>
+                                    <option key={index} value={franchise.franchiseCode}>{franchise.franchiseCode}</option>
+                                    )
+                                }
+                            </select>
+                        </div>
                     </div>
                     :""
                 }
                 <hr/>
                 {
-                users.length!=0?
+                users?.length!=0?
                 <table className="table table-striped table-hover">
                 <thead>
                     <tr>
@@ -133,7 +148,8 @@ export default function User(props){
                 </thead>
                 <tbody>
                 {
-                users.map( (user, index)=>
+                users?.map( (user, index)=>
+                filter=="" || filter == user.franchiseCode?
                     <tr key={index} onClick={() => {setModalContent(users[index]); setIndex(index)}}>
                     <th scope="row">{index+1}</th>
                     <td data-bs-toggle="modal" data-bs-target="#userDetails">
@@ -153,6 +169,7 @@ export default function User(props){
                         </a>    
                     </td>
                     </tr>
+                : ""
                 )}
                 </tbody>
                 </table>
@@ -301,7 +318,7 @@ export default function User(props){
                     <div className="modal-footer">
                         { users?.admin_access == 1 ?
                         <a href={`${process.env.host}user/quiz/response/${modalContent.userCode}`} className="me-auto" target="_blank">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-download" viewBox="0 0 16 16">
                                 <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
                                 <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
                             </svg> Response

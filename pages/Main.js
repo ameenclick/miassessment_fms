@@ -22,30 +22,6 @@ function Main(){
     const [franchises, setFranchises]=useState(undefined)
     const [alert, setAlert]=useState(false)
     const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
-    const getUsers = async () => {
-        try {
-            let url=""
-            if(user.admin_access == 1) url=`users/details`
-            else url=`users/details/${user.franchiseCode}`
-            const users = await axiosPrivate.get(url,{       
-                        signal: controller.signal
-                    })
-            isMounted && setUsers(users?.data? users.data:[])
-            } catch (err) {
-                console.error(err)
-            }
-    }
-    const getFranchises = async () => {
-        try {
-            const franchises = await axiosPrivate.get(`franchise/details`, {
-            signal: controller.signal
-            })
-            isMounted && setFranchises(franchises?.data? franchises.data:[])
-        }
-        catch (err){
-            console.error(err)
-        }
-    }
 
     useEffect(() => {
         if(auth && !auth.user){
@@ -53,7 +29,31 @@ function Main(){
             router.push("/SignIn");
         }
         let isMounted = true;
-        const controller = new AbortController();  
+        const controller = new AbortController(); 
+        const getUsers = async () => {
+            try {
+                let url=""
+                if(user.admin_access == 1) url=`users/details`
+                else url=`users/details/${user.franchiseCode}`
+                const users = await axiosPrivate.get(url,{       
+                            signal: controller.signal
+                        })
+                isMounted && setUsers(users?.data? users.data:[])
+                } catch (err) {
+                    console.error(err)
+                }
+        }
+        const getFranchises = async () => {
+            try {
+                const franchises = await axiosPrivate.get(`franchise/details`, {
+                signal: controller.signal
+                })
+                isMounted && setFranchises(franchises?.data? franchises.data:[])
+            }
+            catch (err){
+                console.error(err)
+            }
+        } 
         if(user) getUsers();
         if(user?.admin_access == 1) getFranchises();
         return () => {
@@ -62,9 +62,28 @@ function Main(){
         }  
     }, [])
 
-    const refreshData = () => {
-        if(user) getUsers();
-        if(user?.admin_access == 1) getFranchises();
+    const refreshData = async () => {
+        if(user) 
+        {
+            try {
+                let url=""
+                if(user.admin_access == 1) url=`users/details`
+                else url=`users/details/${user.franchiseCode}`
+                const users = await axiosPrivate.get(url)
+                setUsers(users?.data? users.data:[])
+                } catch (err) {
+                    console.error(err)
+                }
+        }
+        if(user?.admin_access == 1){
+            try {
+                const franchises = await axiosPrivate.get(`franchise/details`)
+                setFranchises(franchises?.data? franchises.data:[])
+            }
+            catch (err){
+                console.error(err)
+            }
+        }
     }
     
     const Signout = async (e) =>{
@@ -115,11 +134,19 @@ function Main(){
                     </div>
                 </div>
             </nav>
+            <div className='mt-5 me-5'>
+                <button className=' float-end btn btn-outline-dark' onClick={refreshData}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                    <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                    </svg>
+                </button>
+            </div>
             {dashboardClass ? <Dashboard userNo={users?users.length:0} franchiseCount={franchises?franchises.length:0} setfranchiseClass={setfranchiseClass} setdashboardClass={setdashboardClass} setuserClass={setuserClass}  franchises={franchises} User={user} />: 
             passwordClass? <ChangePassword />:
                 userClass? <User users={users} franchises={franchises} User={user}/>: 
                     franchiseClass? <Franchises franchises={franchises} User={user}/> : "Ops You lost somewhere...."
-            }
+            } 
             </div>
             :
             <>

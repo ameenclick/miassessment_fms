@@ -20,7 +20,7 @@ export default function Search(props){
 
     return(
         <>
-            <input type="text" id={styles.myInput} onChange={(e) => {e.preventDefault(); mySearch(e.target.value)}} placeholder={"Search "+props.keyword+" here.."} title="Type in a name"></input>
+            <input className="form-control form-control-lg" type="text" id={styles.myInput} onChange={(e) => {e.preventDefault(); mySearch(e.target.value)}} placeholder={"Search "+props.keyword+" here.."} title="Type in a name"></input>
         </>
     )
 }

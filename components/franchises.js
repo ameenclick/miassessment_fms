@@ -13,13 +13,13 @@ export default function Franchises(props){
     const [franchises, setFranchises] = useState(props.franchises)
     const [modalContent, setModalContent]= useState({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:""})
     const [edit, setEdit]=useState(false)
-    const [company,setCompany]=useState()
-    const [admin, setAdmin]=useState()
-    const [designation, setDesignation]=useState()
-    const [address, setAddress]=useState()
-    const [website, setWebsite]=useState()
-    const [email, setEmail]=useState()
-    const [phone, setPhone]=useState()
+    const [company,setCompany]=useState("")
+    const [admin, setAdmin]=useState("")
+    const [designation, setDesignation]=useState("")
+    const [address, setAddress]=useState("")
+    const [website, setWebsite]=useState("")
+    const [email, setEmail]=useState("")
+    const [phone, setPhone]=useState("")
     const [index, setIndex]=useState(0)
     const [alert, setAlert]=useState(false)
     const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
@@ -58,6 +58,11 @@ export default function Franchises(props){
         }
     }, [logo])
     
+    //Update componenet on refresh
+    useEffect(() => {
+        setFranchises(props.franchises)
+    }, [props.franchises])
+
         //Alert Timer
     useEffect(() => {
         var count
@@ -265,7 +270,7 @@ export default function Franchises(props){
                 <div className='col'>
                     <h3>Franchises</h3>
                 </div>
-                <div className='col-lg-8'>
+                <div className='col-lg-8 mb-3'>
                     { franchises?
                     <Search id={"searchCol"} keyword={"franchise"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
                     : <h4>Create the first franchise</h4>

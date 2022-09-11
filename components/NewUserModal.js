@@ -5,7 +5,7 @@ import style from "../styles/loader.module.css"
 export default function NewUserModal({franchises, setFranchises}){
     const axiosPrivate = useAxiosPrivate();
     const [userNo, setUserno] = useState(0);
-    const Franchises = [{franchiseCode: "MI_APP", company: "Centre Of Innovation", account_status: "Active", client_name: "App"}].concat([...franchises,])
+    const Franchises = franchises?[{franchiseCode: "MI_APP", company: "Centre Of Innovation", account_status: "Active", client_name: "App"}].concat([...franchises,]):[{franchiseCode: "MI_APP", company: "Centre Of Innovation", account_status: "Active", client_name: "App"}];
     const [choosenFranchise, setChoosenfranchise] = useState(0);
     const [generation, setGeneration] = useState(false)
     const [codes, setCodes] = useState(undefined)
