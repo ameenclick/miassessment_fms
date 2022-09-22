@@ -15,16 +15,17 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
    useEffect(() => {
         if(Unsold==undefined)
         {
+            try{
             axiosPrivate.get(`unsold/codes/${User.franchiseCode}`)
             .then(res => {
                 setUnsoldCount(res.data.length)
                 setUnsold(res.data)
             })
-            .catch(error => { 
+        } catch(error){ 
                 console.error(error.data)
                 setAlertmessage({ message: error.data? error.data:"Something wrong with server, unable to show unsold..", type: "danger"});
                 setAlert(true)
-            })
+            }
         }
    }, [Unsold])
 
@@ -32,7 +33,7 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
       <>
         <div className="container p-5">
             <div className='row'>
-                <h3>Welcome {User.client_name}  {(UnsoldCount && User.admin_access===1)?<button className="btn btn-outline-warning rounded-pill fs-6" data-bs-toggle="modal" data-bs-target="#unsold">{UnsoldCount} Unsold</button>:""}</h3>
+                <h3>Welcome {User?.client_name}  {(UnsoldCount && User?.admin_access===1)?<button className="btn btn-outline-warning rounded-pill fs-6" data-bs-toggle="modal" data-bs-target="#unsold">{UnsoldCount} Unsold</button>:""}</h3>
                 <hr/>
             </div>
             <div className="row align-items-center justify-content-center text-center">
@@ -50,7 +51,7 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
                         </div>
                 </button>
                 {
-                    User.admin_access==1?
+                    User?.admin_access==1?
                     <>
                     <button className="col-lg-3 mx-2 my-3 btn btn-outline-primary py-3" onClick={() => {setfranchiseClass(true); setdashboardClass(false)}}>
                         <div className='row align-items-start'>
@@ -70,7 +71,7 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
                     <button className="col-lg-3 mx-2 my-3 btn btn-outline-warning py-3"  data-bs-toggle="modal" data-bs-target="#unsold">
                         <div className='row align-items-start' >
                             <div className="col">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" class="bi bi-collection" viewBox="0 0 16 16">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" className="bi bi-collection" viewBox="0 0 16 16">
                             <path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6v7zm1.5.5A.5.5 0 0 1 1 13V6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-13z"/>
                                 </svg>
                             </div>
@@ -115,8 +116,7 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
                 </div>
             </div>
         </div>
-        <Alert message={alertMessage.message} type={alertMessage.type} alert={alert} setAlert={setAlert}/>
-        
+        <Alert message={alertMessage.message} type={alertMessage.type} alert={alert} setAlert={setAlert}/> 
         <Footer />
       </>
   );

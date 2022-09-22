@@ -1,10 +1,12 @@
 import React, { useEffect, useState }  from 'react';
 import Search from './Search';
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
+import useAuth from '../hooks/useAuth';
 
 export default function User(props){
     const [users, setUsers]=useState(props.users)
     const [modalContent, setModalContent]=useState(users?.length>0?users[0]:undefined)
+    const { auth } = useAuth();
     const [edit, setEdit]=useState(false)
     const [userCode, setusercode]=useState()
     const [name, setName]=useState()
@@ -122,14 +124,19 @@ export default function User(props){
                     <div className='col-lg-9'>
                         <div className="input-group mb-3">
                             <Search id={"searchCol"} keyword={"user"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
+                            {auth?.user.admin_access == 1?
                             <select className="form-select form-select-lg" onChange={(e) => {setFilter(e.target.value)}} aria-label=".form-select example">
-                                <option defaultValue="">Show all</option>
+                                <option value="">Show all</option>
+                                <option value="MI_APP">MI_APP</option>
                                 {
-                                    props.franchises.map((franchise,index) =>
+                                    props?.franchises?.map((franchise,index) =>
                                     <option key={index} value={franchise.franchiseCode}>{franchise.franchiseCode}</option>
                                     )
                                 }
                             </select>
+                            
+                            : ""}
+                            
                         </div>
                     </div>
                     :""
