@@ -144,42 +144,44 @@ export default function User(props){
                 <hr/>
                 {
                 users?.length!=0?
-                <table className="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Code</th>
-                        <th scope="col">User Name</th>
-                        <th scope="col">Franchise</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {
-                users?.map( (user, index)=>
-                filter=="" || filter == user.franchiseCode?
-                    <tr key={index} onClick={() => {setModalContent(users[index]); setIndex(index)}}>
-                    <th scope="row">{index+1}</th>
-                    <td data-bs-toggle="modal" data-bs-target="#userDetails">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person" viewBox="0 0 16 16">
-                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
-                        </svg>
-                        {user.userCode}
-                    </td>
-                    <td data-bs-toggle="modal" data-bs-target="#userDetails">{user.name}</td>
-                    <td>{user.franchiseCode? user.franchiseCode: "MI_APP"}</td>
-                    <td>
-                        <a href={user.report_url} target="_blank" className='btn btn-primary'>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-file-earmark-bar-graph" viewBox="0 0 16 16">
-                                <path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v6zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-1z"/>
-                                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
-                            </svg> Report
-                        </a>    
-                    </td>
-                    </tr>
-                : ""
-                )}
-                </tbody>
-                </table>
+                <div style={{height: "100%", width: "100%", overflowY: "scroll"}}>
+                    <table className="table table-striped table-hover">
+                    <thead className='sticky-top bg-white'>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Code</th>
+                            <th scope="col">User Name</th>
+                            <th scope="col">Franchise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {
+                    users?.map( (user, index)=>
+                    filter=="" || filter == user.franchiseCode?
+                        <tr key={index} onClick={() => {setModalContent(users[index]); setIndex(index)}}>
+                        <th scope="row">{index+1}</th>
+                        <td data-bs-toggle="modal" data-bs-target="#userDetails">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person" viewBox="0 0 16 16">
+                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                            </svg>
+                            {user.userCode}
+                        </td>
+                        <td data-bs-toggle="modal" data-bs-target="#userDetails">{user.name}</td>
+                        <td>{user.franchiseCode? user.franchiseCode: "MI_APP"}</td>
+                        <td>
+                            <a href={user.report_url} target="_blank" className='btn btn-primary'>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-file-earmark-bar-graph" viewBox="0 0 16 16">
+                                    <path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v6zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-1z"/>
+                                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                                </svg> Report
+                            </a>    
+                        </td>
+                        </tr>
+                    : ""
+                    )}
+                    </tbody>
+                    </table>
+                </div>
                 :
                 <h2 className='text-center'>No users registered yet..</h2>
                 }
