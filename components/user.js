@@ -124,7 +124,7 @@ export default function User(props){
                     <div className='col-lg-9'>
                         <div className="input-group mb-3">
                             <Search id={"searchCol"} keyword={"user"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
-                            {auth?.user.admin_access == 1?
+                            {auth?.user?.admin_access == 1?
                             <select className="form-select form-select-lg" onChange={(e) => {setFilter(e.target.value)}} aria-label=".form-select example">
                                 <option value="">Show all</option>
                                 <option value="MI_APP">MI_APP</option>
@@ -323,7 +323,7 @@ export default function User(props){
                     }
                     
                     <div className="modal-footer">
-                        { users?.admin_access == 1 ?
+                        { auth?.user?.admin_access == 1 ?
                         <a href={`${process.env.host}user/quiz/response/${modalContent.userCode}`} className="me-auto" target="_blank">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-download" viewBox="0 0 16 16">
                                 <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>

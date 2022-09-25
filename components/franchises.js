@@ -347,7 +347,7 @@ export default function Franchises(props){
                 </div>
                 <div className='col-lg-8 mb-3'>
                     { franchises?
-                    <Search id={"searchCol"} keyword={"client"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
+                    <Search id={"searchCol"} keyword={"client"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={2}/>
                     : <h4>Create the first franchise</h4>
                     }
                 </div>
