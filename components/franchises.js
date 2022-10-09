@@ -36,10 +36,6 @@ export default function Franchises(props){
         setFranchises(props.franchises)
     }, [])
 
-    // useEffect(() => {
-    //     console.log(imageUrl)
-    // }, [imageUrl])
-
     //Run When Model Content Update (To save changes)
     useEffect(() => {
         if(modalContent)
