@@ -27,6 +27,7 @@ export default function User(props){
     const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
     const [filter, setFilter] = useState("")
     const [whatappAudioUrl, setWhatsappAudio] = useState("");
+    const [whatsappForward, setForwardWhatsapp] = useState(false);
     const [audioProgress, setAudioprogress] = useState(0);
     const axiosPrivate = useAxiosPrivate();
 
@@ -54,14 +55,14 @@ export default function User(props){
     }, [props.users])
 
     //Upload the Consultation audio to S3
-    const uploadAudio = () => {
+    const uploadAudio = (e) => {
         const s3 = new AWS.S3({
             params: { Bucket: process.env.AWS_BUCKET},
             region: process.env.AWS_REGION,
         })
         const uploadParams = {
-            Key : `caudio/${modalContent.userCode}`,
-            Body : file,
+            Key : `caudio/${modalContent.userCode}.mp3`,
+            Body : e.target.files[0],
             Bucket : process.env.AWS_BUCKET
           }
           s3.upload(uploadParams,(err,res) =>{
@@ -70,13 +71,20 @@ export default function User(props){
                 console.error(err)
             }
             else{
-
+                setForwardWhatsapp(true)
                 setWhatsappAudio(res.Location)
             }
         }).on('httpUploadProgress', (evt) => {
             setAudioprogress(Math.round((evt.loaded / evt.total) * 100))
         })
     }
+
+    useEffect(() => {
+        if(!edit)
+        {
+            setAudioprogress(false);
+        }
+    }, [edit])
 
     //Save All Changes in User Details
     const saveChange = async () => {
@@ -98,7 +106,8 @@ export default function User(props){
             country:country,
             userCode: modalContent.userCode,
             whatsapp: whatsapp,
-            caudio: whatappAudioUrl
+            caudio: whatappAudioUrl,
+            sendWhatsApp: whatsappForward
         }
         const response = await axiosPrivate.post('update/user', userTemp[index]);
         if(response.status == 200 && response.data=="Success")
@@ -141,15 +150,6 @@ export default function User(props){
                     }, 1000)
             }
         }, [alert])
-
-    
-    //Play Consultation Audio
-    const startConsultation = () => {
-        if(modalContent.caudio){
-            const audio = new Audio(modalContent.caudio);
-            audio.play();
-        }
-    } 
 
     return (
         <>
@@ -308,19 +308,23 @@ export default function User(props){
                             </div>
                         </div>
                         <div className='row p-2'>
-                            <label>Whats App Audio</label>
+                            <div className='col'>
+                                <label>Whats App Number</label><span className='text-danger'>*</span>
+                                <input className='form-control' value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required/>  
+                            </div>
+                        </div>
+                        <div className='row p-2'>
+                            <label>New Whats App Audio</label>
                             <div className='input-group'>
                                 <input type="file" class="form-control" placeholder="Audio File" aria-label="Username" onChange={uploadAudio} aria-describedby="addon-wrapping"/>
-                                {//Loading progress bar
+                            </div>
+                            {//Loading progress bar
                                     audioProgress > 0?
                                     <div className="progress">
                                         <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${audioProgress}%`}} aria-valuenow={audioProgress} aria-valuemin="0" aria-valuemax="100">{`${audioProgress}%`}</div>
                                     </div>
                                     : ""
                                 }
-                                {/* <div className="fileStatus">
-                                </div> */}
-                            </div>
                         </div>
                     </div>
                     : 
@@ -378,10 +382,11 @@ export default function User(props){
                         </div>
                         <div className='row p-2'>
                         {
-                            modalContent.caudio?
-                                <button onClick={startConsultation}>
-                                    Consultation
-                                </button>
+                            modalContent.caudioUrl?
+                            <audio controls>
+                                <source src={modalContent.caudioUrl}/>
+                                Your browser does not support the audio element.
+                            </audio>
                             :
                             <div className='col'>
                             Edit and upload consultation audio

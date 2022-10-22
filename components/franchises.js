@@ -607,9 +607,6 @@ export default function Franchises(props){
                                     </div>
                                     : ""
                                     }
-                                    {/* <div className='col-lg-12 my-1'>
-                                        <Preview />
-                                    </div> */}
                                 </div>
                         </div>
                         :
