@@ -3,6 +3,7 @@ import React, { useState,useEffect }  from 'react';
 import NewUser from './NewUser';
 import Search from './Search';
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
+// import Preview from './Preview';
 AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_KEY
@@ -11,7 +12,7 @@ AWS.config.update({
 
 export default function Franchises(props){
     const [franchises, setFranchises] = useState(props.franchises)
-    const [modalContent, setModalContent]= useState({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:""})
+    const [modalContent, setModalContent]= useState({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:"", logo_url:"", cover1: "", cover2: "", backcover: "", branding: false})
     const [edit, setEdit]=useState(false)
     const [company,setCompany]=useState("")
     const [admin, setAdmin]=useState("")
@@ -24,11 +25,10 @@ export default function Franchises(props){
     const [alert, setAlert]=useState(false)
     const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
     const [account, setAccount]=useState(true)
-    const [logo, setLogo] = useState('');
-    const [logoLocation, setlogoLocation] = useState(undefined) 
-    const [logoProgress , setProgresslogo] = useState(0);
-    const [filename, setFilename] = useState("")
-    const [logoSrc, setLogoSrc] = useState(undefined)
+    const [imageUrl, setImageUrl] = useState({ logos: null, backcover: null, cover1: null, cover2: null}) 
+    const [progress, setProgress] = useState({ logos: 0, backcover: 0, cover1: 0, cover2: 0})
+    const [imageStatus, setImageStatus] = useState({ logos: "", backcover: "", cover1: "", cover2: ""})
+    const [brand, setBrand] = useState(false)
     const [Unsold, setUnsold] = useState(undefined)
     const axiosPrivate = useAxiosPrivate();
 
@@ -36,7 +36,11 @@ export default function Franchises(props){
         setFranchises(props.franchises)
     }, [])
 
-    //Model Content Update
+    // useEffect(() => {
+    //     console.log(imageUrl)
+    // }, [imageUrl])
+
+    //Run When Model Content Update (To save changes)
     useEffect(() => {
         if(modalContent)
         {
@@ -47,16 +51,24 @@ export default function Franchises(props){
             setWebsite(modalContent.website)
             setEmail(modalContent.email)
             setPhone(modalContent.phone)
+            setImageUrl({
+                 logos: modalContent.logo_url,
+                 cover1: modalContent.cover1,
+                 cover2: modalContent.cover2,
+                 backcover: modalContent.backcover
+            })
+            setBrand(modalContent.branding?true:false)
+            setProgress({ logos: 0, backcover: 0, cover1: 0, cover2: 0})
         }
     }, [modalContent])
 
     //Render Uploaded Image
-    useEffect(() => {
-        if(logo)
-        {
-            setLogoSrc(URL.createObjectURL(logo))   
-        }
-    }, [logo])
+    // useEffect(() => {
+    //     if(logo)
+    //     {
+    //         setLogoSrc(URL.createObjectURL(logo))   
+    //     }
+    // }, [logo])
     
     //Update componenet on refresh
     useEffect(() => {
@@ -83,7 +95,6 @@ export default function Franchises(props){
 
     const saveChange = () => {
         var content = [...franchises];
-        content[index].franchiseCode=franchises[index].franchiseCode;
         content[index].company= company.replace(/'/g, "\\'");
         content[index].client_name=admin
         content[index].designation=designation;
@@ -91,6 +102,11 @@ export default function Franchises(props){
         content[index].website=website;
         content[index].email=email;
         content[index].phone=phone;
+        content[index].logo_url=imageUrl.logos;
+        content[index].cover1=imageUrl.cover1;
+        content[index].cover2=imageUrl.cover2;
+        content[index].backcover=imageUrl.backcover;
+        content[index].branding=brand;
         axiosPrivate.post(`update/franchise`, content[index])
         .then(res =>{
             if(res.data == "Success")
@@ -99,6 +115,7 @@ export default function Franchises(props){
                 setEdit(false)
                 setAlertmessage({message : "Changes saved successfully", type:"success"});
                 setAlert(true);
+                setBrand(false);
             }
             else
             {
@@ -110,14 +127,14 @@ export default function Franchises(props){
         
     }
 
-    const uploadImage = () => {
+    function updateS3(fileCategory,filename,file){
         const s3 = new AWS.S3({
             params: { Bucket: process.env.AWS_BUCKET},
             region: process.env.AWS_REGION,
         })
         const uploadParams = {
-            Key : 'franchises/logos/'+Math.floor(Math.random() * 20)+filename,
-            Body : logo,
+            Key : `franchises/${fileCategory}/${filename}`,
+            Body : file,
             Bucket : process.env.AWS_BUCKET
           }
         s3.upload(uploadParams,(err,res) =>{
@@ -126,24 +143,79 @@ export default function Franchises(props){
                 console.error(err)
             }
             else{
-                setlogoLocation(res.Location)
+                setImageUrl({ ...imageUrl, [fileCategory]: res.Location})
             }
         }).on('httpUploadProgress', (evt) => {
-            setProgresslogo(Math.round((evt.loaded / evt.total) * 100))
+            setProgress({ ...progress, [fileCategory]: Math.round((evt.loaded / evt.total) * 100)})
         })
 
     }
 
-    function createFranchiseAccount(e){
-        e.preventDefault()
-        if(logoSrc)
-        {
-            if(!logoLocation)
+    function uploadS3(fileCategory,filename,file){
+        const s3 = new AWS.S3({
+            params: { Bucket: process.env.AWS_BUCKET},
+            region: process.env.AWS_REGION,
+        })
+        const uploadParams = {
+            Key : `franchises/${fileCategory}/${Math.floor(Math.random() * 20)+filename}`,
+            Body : file,
+            Bucket : process.env.AWS_BUCKET
+          }
+        s3.upload(uploadParams,(err,res) =>{
+            if(err)
             {
-                setAlertmessage({ message: "You should click upload", type: "warning"});
-                setAlert(true)
+                console.error(err)
+            }
+            else{
+                setImageUrl({ ...imageUrl, [fileCategory]: res.Location})
+            }
+        }).on('httpUploadProgress', (evt) => {
+            setProgress({ ...progress, [fileCategory]: Math.round((evt.loaded / evt.total) * 100)})
+        })
+
+    }
+
+    function validateSelectedFile(event,maxLength, Width, Height,fileCategory){
+        var selectedFile = event.target.files[0]
+        const MAX_FILE_SIZE = maxLength // KB
+    
+        const fileSizeKiloBytes = selectedFile?.size / 1024
+        if(fileSizeKiloBytes > MAX_FILE_SIZE){
+            setImageStatus({ ...imageStatus, [fileCategory]: "File size exceeded the limit"})
+            return
+          }
+        var img = document.createElement("img");
+        img.onload = function () {
+            if(img.width != Width && img.height != Height)
+            {
+                setImageStatus({ ...imageStatus, [fileCategory]: `File resolution not matches the criteria ${Width} x ${Height}`})
                 return
             }
+            else{
+                console.log("Uploading")
+                
+                if(edit && imageUrl[fileCategory] != null)
+                {
+                    console.log(imageUrl[fileCategory].split(fileCategory+"/")[1])
+                    updateS3(fileCategory,imageUrl[fileCategory].split(fileCategory+"/")[1], selectedFile)
+                } 
+                else uploadS3(fileCategory,selectedFile.name, selectedFile)
+            }
+          };
+        img.src = URL.createObjectURL(selectedFile)
+        setImageStatus({ ...imageStatus, [fileCategory]: ""})
+        };
+
+    function createFranchiseAccount(e){
+        e.preventDefault()
+        if(brand)
+        {
+             if(!imageUrl.logos)
+             {
+                 setAlertmessage({ message: "You should click upload", type: "warning"});
+                 setAlert(true)
+                 return
+             }
         }
         const details = {
             company: company.replace(/'/g, "\\'"),
@@ -153,16 +225,19 @@ export default function Franchises(props){
             website: website,
             email: email,
             phone: phone,
-            logo_url: logoLocation? logoLocation: null
+            logo_url: imageUrl.logos,
+            cover1: imageUrl.cover1,
+            cover2: imageUrl.cover2,
+            backcover: imageUrl.backcover,
+            branding: brand
         }
         axiosPrivate.post("register/franchise",details)
         .then(response => {
                 setAlertmessage({ message: "New franchise created", type: "success"});
                 var temp=[...franchises].concat([response.data])
-                setModalContent({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:""})
-                setLogoSrc("")
-                setlogoLocation("")
+                setModalContent({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:"", logo_url:"", cover1: "", cover2: "", backcover: "", branding: false})
                 setFranchises(temp)
+                setBrand(false)
         })
         .catch(error => { 
             if(error.response.status == 409)
@@ -272,15 +347,27 @@ export default function Franchises(props){
                 </div>
                 <div className='col-lg-8 mb-3'>
                     { franchises?
-                    <Search id={"searchCol"} keyword={"franchise"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
+                    <Search id={"searchCol"} keyword={"client"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={2}/>
                     : <h4>Create the first franchise</h4>
                     }
                 </div>
                 <div className='col mb-1'>
-                    <button className='btn btn-primary float-end' data-bs-toggle="modal" data-bs-target="#createFranchise" onClick={() => setModalContent({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:""})}>
+                    <button className='btn btn-primary float-end' data-bs-toggle="modal" data-bs-target="#createFranchise" onClick={() => setModalContent(
+                                                                                                                            {   company: "",
+                                                                                                                                client_name: "",
+                                                                                                                                address: "",
+                                                                                                                                website: "",
+                                                                                                                                email: "",
+                                                                                                                                phone: "",
+                                                                                                                                designation:"",
+                                                                                                                                logo_url:"",
+                                                                                                                                 cover1: "",
+                                                                                                                                  cover2: "",
+                                                                                                                                   backcover: "",
+                                                                                                                                    branding: false})}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" className="bi bi-plus-circle-fill" viewBox="0 0 16 16">
                                 <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
-                        </svg>    Create New
+                        </svg>    Create
                     </button>
                 </div>     
                 { !franchises? 
@@ -312,7 +399,7 @@ export default function Franchises(props){
                                 <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i);}}>{franchise.franchiseCode}</td>
                                 <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i);}}>{franchise.client_name}</td>
                                 <td title='View full profile on click' data-bs-toggle="modal" data-bs-target="#franchiseDetails"  onClick={() =>{ setModalContent(franchises[i]); setIndex(i);}}>{franchise.company}</td>
-                                <td className='text-center fs-5'><button className="badge bg-secondary" data-bs-toggle="modal" data-bs-target="#unsold" onClick={() => {getUnsold(franchise.franchiseCode); setIndex(i)}}>{franchise.codes_generated-franchise.users_registered}</button></td>
+                                <td className='text-center fs-5'><button className="badge bg-secondary" data-bs-toggle="modal" data-bs-target="#unsold" onClick={() => {getUnsold(franchise.franchiseCode); setIndex(i)}}>Codes</button></td>
                                 {
                                     franchise.franchiseCode != "MI_APP"?
                                     <td>
@@ -349,7 +436,7 @@ export default function Franchises(props){
                          { modalContent.account_status == "Revoked"?
                           <span className="badge rounded-pill bg-danger">Revoked</span> : 
                           <span className="badge rounded-pill bg-success">Active</span> }
-                        <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={() => setEdit(false)}></button>
+                        <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={() => {setEdit(false); setBrand(false);}}></button>
                     </div>
                     <div className="modal-body">
                         {
@@ -409,7 +496,125 @@ export default function Franchises(props){
                                     </label>
                                     <input name="website" type="text" className='form-control form-control-lg mb-3' placeholder="Change website" onChange={(e) => setWebsite(e.target.value)} value={website}  required/>
                                 </div>
-                            </div>
+                        </div>
+                                <div className='row'>
+                                <div className='col'>
+                                    <label className="form-check-label" for="brandUser">Enable branded user reports for this franchise.</label>
+                                    <div className="form-check form-switch">
+                                        <input className="form-check-input" style={{ height: "25px", width: "70px"}} onChange={() => { setBrand(!brand) }} type="checkbox" role="switch" id="brandUser" checked={brand}/>
+                                    </div>
+                                </div>
+                                {  imageUrl?.logos || brand ?
+                                    <div className='col-lg-12 my-2'>
+                                        <label>
+                                            Brand Logo (3049 x 2639) Max: 500kb 
+                                            {progress.logos === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="logos" type="file" className='form-control form-control-lg' onChange={(e) =>{ validateSelectedFile(e, 500, 3049, 2639,'logos');}} id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                            <div className="fileStatus">
+                                            </div>
+                                        </div>
+                                        {//Loading progress bar
+                                        progress.logos > 0?
+                                            <div className="progress">
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.logos}%`}} aria-valuenow={progress.logos} aria-valuemin="0" aria-valuemax="100">{`${progress.logos}%`}</div>
+                                            </div>
+                                                : ""
+                                        }
+                                        <p className='text-danger'>{imageStatus.logos}</p>
+                                    </div>
+                                     :
+                                     ""
+                                 }
+                                  {  imageUrl?.backcover || brand?
+                                    <div className='col-lg-12 my-2'>
+                                        <label>
+                                            Back Cover (383 x 389) Max: 50kb
+                                            {progress.backcover === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="backcover" type="file" className='form-control form-control-lg' onChange={(e) =>{ validateSelectedFile(e, 50, 383, 389, 'backcover')} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                        </div> 
+                                        {//Loading Progress Bar
+                                        progress.backcover > 0?
+                                            <div className="progress">
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.backcover}%`}} aria-valuenow={progress.backcover} aria-valuemin="0" aria-valuemax="100">{`${progress.backcover}%`}</div>
+                                            </div>
+                                                : ""
+                                        }
+                                        <p className='text-danger'>{imageStatus.backcover}</p>
+                                    </div>
+                                    :""
+                                }
+                                {  imageUrl?.cover1 || brand?
+                                    <div className='col-lg-12 my-2'>
+                                        <label>
+                                            Cover Image Top (812 X 369) Max: 100kb
+                                            {progress.cover1 === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="cover1" type="file" className='form-control form-control-lg'  onChange={(e) =>{ validateSelectedFile(e, 100, 812, 369, "cover1");} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                        </div> 
+                                        {//Loading Progress Bar
+                                        progress.cover1 > 0?
+                                            <div className="progress">
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.cover1}%`}} aria-valuenow={progress.cover1} aria-valuemin="0" aria-valuemax="100">{`${progress.cover1}%`}</div>
+                                            </div>
+                                                : ""
+                                        }
+                                        <p className='text-danger'>{imageStatus.cover1}</p>
+                                    </div>
+                                    : ""
+                                }
+                                {  imageUrl?.cover1 || brand?
+                                    <div className='col-lg-12 my-2'>
+                                        <label>
+                                            Cover Image Bottom (812 X 546) Max: 200kb
+                                            {progress.cover2 === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="cover2" type="file" className='form-control form-control-lg'  onChange={(e) =>{ validateSelectedFile(e, 200,812, 546, "cover2");} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                        </div> 
+                                        {//Loading Progress Bar
+                                        progress.cover2 > 0?
+                                            <div className="progress">
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.cover2}%`}} aria-valuenow={progress.cover2} aria-valuemin="0" aria-valuemax="100">{`${progress.cover2}%`}</div>
+                                            </div>
+                                                : ""
+                                        }
+                                        <p className='text-danger'>{imageStatus.cover2}</p>
+                                    </div>
+                                    : ""
+                                    }
+                                    {/* <div className='col-lg-12 my-1'>
+                                        <Preview />
+                                    </div> */}
+                                </div>
                         </div>
                         :
                         <table className="table table-striped table-hover">
@@ -456,7 +661,7 @@ export default function Franchises(props){
                         <button type="button" className="btn btn-outline-success me-auto" data-bs-dismiss="modal" onClick={() =>{confirm(`User will be able to access fms, Do you confirm?`)? changePrivilege(modalContent.franchiseCode,"activate"):null}}>Activate</button>
                         }
                         
-                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={() =>{ setEdit(false)}}>Close</button>
+                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={() =>{ setEdit(false); setBrand(false);}}>Close</button>
                         { edit? 
                         
                         <button type="button" className="btn btn-success" onClick={saveChange}  data-bs-dismiss="modal">
@@ -484,7 +689,7 @@ export default function Franchises(props){
                 <div className="modal-content">
                 <div className="modal-header">
                     <h5 className="modal-title" id="exampleModalLabel">Register New Franchise</h5>
-                    <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={() =>{ setBrand(false)}}></button>
                 </div>
                 { alert?
                     <div className='row'>
@@ -560,38 +765,121 @@ export default function Franchises(props){
                                     </label><span className='text-danger'>*</span>
                                     <input name="phone" type="number" pattern='[0-9]+{7,20}$' title='Mandatory field' onChange={(e) => setPhone(e.target.value)} value={phone} className='form-control form-control-lg' placeholder="Enter phone" required/>
                                 </div>
-                                <div className='col-lg-8'>
-                                        <label>
-                                            Brand Logo
-                                        </label>
-                                        <div className='input-group'>
-                                            <input name="logo" type="file" className='form-control form-control-lg' onChange={(e) =>{ setLogo(e.target.files[0]); setFilename(e.target.files[0].name)} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
-                                            <button className='btn btn-primary' onClick={(e) => {e.preventDefault(); uploadImage();}} disabled={filename? false:true}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-upload" viewBox="0 0 16 16">
-                                                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
-                                                <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
-                                            </svg> Upload</button>
-                                        </div> 
+                                <div className='col'>
+                                    <label className="form-check-label" for="brandUser">Enable branded user reports for this franchise.</label>
+                                    <div className="form-check form-switch">
+                                        <input className="form-check-input" style={{ height: "25px", width: "70px"}} onChange={() => { setBrand(!brand) }} type="checkbox" role="switch" id="brandUser"/>
+                                    </div>
                                 </div>
                             </div>
-                            {    logoSrc?
-                                <div className='row  justify-content-center'>
-                                    <div className="col-lg-4 my-4">
-                                        {
-                                            logoProgress > 0?
+                            {
+                                brand?
+                                <div className='row'>
+                                    <div className='col-lg-6 my-2'>
+                                        <label>
+                                            Brand Logo (3049 x 2639) Max: 500kb
+                                            {progress?.logos === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="logos" type="file" className='form-control form-control-lg' onChange={(e) =>{ validateSelectedFile(e, 500, 3049, 2639,'logos');}} id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                            <div className="fileStatus">
+                                            </div>
+                                        </div>
+                                        {//Loading progress bar
+                                        progress?.logos > 0?
                                             <div className="progress">
-                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${logoProgress}%`}} aria-valuenow={logoProgress} aria-valuemin="0" aria-valuemax="100">{`${logoProgress}%`}</div>
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.logos}%`}} aria-valuenow={progress.logos} aria-valuemin="0" aria-valuemax="100">{`${progress.logos}%`}</div>
                                             </div>
                                                 : ""
                                         }
-                                        <img src={logoSrc} className="img-thumbnail float-center" alt="Logo"/>
+                                        <p className='text-danger'>{imageStatus.logos}</p>
                                     </div>
-                                </div>:""
+                                    <div className='col-lg-6 my-2'>
+                                        <label>
+                                            Back Cover (383 x 389) Max: 50kb
+                                            {progress?.backcover === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="backcover" type="file" className='form-control form-control-lg' onChange={(e) =>{ validateSelectedFile(e, 50, 383, 389, 'backcover')} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                        </div> 
+                                        {//Loading Progress Bar
+                                        progress?.backcover > 0?
+                                            <div className="progress">
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.backcover}%`}} aria-valuenow={progress.backcover} aria-valuemin="0" aria-valuemax="100">{`${progress.backcover}%`}</div>
+                                            </div>
+                                                : ""
+                                        }
+                                        <p className='text-danger'>{imageStatus.backcover}</p>
+                                    </div>
+                                    <div className='col-lg-6 my-2'>
+                                        <label>
+                                            Cover Image Top (812 X 369) Max: 100kb
+                                            {progress?.cover1 === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="cover1" type="file" className='form-control form-control-lg'  onChange={(e) =>{ validateSelectedFile(e, 100, 812, 369, "cover1");} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                        </div> 
+                                        {//Loading Progress Bar
+                                        progress?.cover1 > 0?
+                                            <div className="progress">
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.cover1}%`}} aria-valuenow={progress.cover1} aria-valuemin="0" aria-valuemax="100">{`${progress.cover1}%`}</div>
+                                            </div>
+                                                : ""
+                                        }
+                                        <p className='text-danger'>{imageStatus.cover1}</p>
+                                    </div>
+                                    <div className='col-lg-6 my-2'>
+                                        <label>
+                                            Cover Image Bottom (812 X 546) Max: 200kb
+                                            {progress?.cover2 === 100?
+                                            <span className='text-success fw-bolder ps-3'>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+                                                </svg> Good
+                                            </span>
+                                            : ""}
+                                        </label>
+                                        <div className='input-group'>
+                                            <input name="cover2" type="file" className='form-control form-control-lg'  onChange={(e) =>{ validateSelectedFile(e, 200,812, 546, "cover2");} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
+                                        </div> 
+                                        {//Loading Progress Bar
+                                        progress?.cover2 > 0?
+                                            <div className="progress">
+                                                <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${progress.cover2}%`}} aria-valuenow={progress.cover2} aria-valuemin="0" aria-valuemax="100">{`${progress.cover2}%`}</div>
+                                            </div>
+                                                : ""
+                                        }
+                                        <p className='text-danger'>{imageStatus.cover2}</p>
+                                    </div>
+                                    {/* <div className='col-lg-12 my-1'>
+                                        <Preview />
+                                    </div> */}
+                                </div>
+                                :
+                                ""
                             }
                         
                     </div>
                     <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={() => {setBrand(false)}}>Close</button>
                         <button className="btn btn-success" type="submit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-bookmark-check-fill" viewBox="0 0 16 16">
                             <path fillRule="evenodd" d="M2 15.5V2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v13.5a.5.5 0 0 1-.74.439L8 13.069l-5.26 2.87A.5.5 0 0 1 2 15.5zm8.854-9.646a.5.5 0 0 0-.708-.708L7.5 7.793 6.354 6.646a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0l3-3z"/>

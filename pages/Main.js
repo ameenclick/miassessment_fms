@@ -1,5 +1,5 @@
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
-import React, { useEffect, useState }  from 'react';
+import React, { useEffect, useState, useCallback }  from 'react';
 import Alert from '../components/alert';
 import Dashboard from '../components/dashboard';
 import Franchises from '../components/franchises';
@@ -62,6 +62,20 @@ function Main(){
         }  
     }, [])
 
+
+    //Limit the rate of execution of the funtion
+    const debounce = (func) => {
+        let timer;
+        return function (...args) {
+          const context = this;
+          if (timer) clearTimeout(timer);
+          timer = setTimeout(() => {
+            timer = null;
+            func.apply(context, args);
+          }, 1000);
+        };
+    };
+
     const refreshData = async () => {
         if(user) 
         {
@@ -85,6 +99,9 @@ function Main(){
             }
         }
     }
+
+    //Avoid senting request again when double click
+    const optimizedRefresh = useCallback(debounce(refreshData), []);
     
     const Signout = async (e) =>{
         try{
@@ -135,7 +152,7 @@ function Main(){
                 </div>
             </nav>
             <div className='mt-5 me-5'>
-                <button className=' float-end btn btn-outline-dark' onClick={refreshData}>
+                <button className=' float-end btn btn-outline-dark' onClick={optimizedRefresh}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-arrow-clockwise" viewBox="0 0 16 16">
                     <path fillRule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
                     <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
