@@ -36,10 +36,6 @@ export default function Franchises(props){
         setFranchises(props.franchises)
     }, [])
 
-    // useEffect(() => {
-    //     console.log(imageUrl)
-    // }, [imageUrl])
-
     //Run When Model Content Update (To save changes)
     useEffect(() => {
         if(modalContent)
@@ -611,9 +607,6 @@ export default function Franchises(props){
                                     </div>
                                     : ""
                                     }
-                                    {/* <div className='col-lg-12 my-1'>
-                                        <Preview />
-                                    </div> */}
                                 </div>
                         </div>
                         :

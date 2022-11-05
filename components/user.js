@@ -20,11 +20,15 @@ export default function User(props){
     const [address, setAddress]=useState()
     const [email, setEmail]=useState()
     const [phone, setPhone]=useState()
+    const [whatsapp, setWhatsapp]=useState()
     const [country, setCountry]=useState()
     const [index, setIndex]=useState(0)
     const [alert, setAlert]=useState(false)
     const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
     const [filter, setFilter] = useState("")
+    const [whatappAudioUrl, setWhatsappAudio] = useState("");
+    const [whatsappForward, setForwardWhatsapp] = useState(false);
+    const [audioProgress, setAudioprogress] = useState(0);
     const axiosPrivate = useAxiosPrivate();
 
     const makeChange = () =>{
@@ -40,7 +44,9 @@ export default function User(props){
         setAddress(modalContent.address)
         setEmail(modalContent.email)
         setPhone(modalContent.phone)
+        setWhatsapp(modalContent.whatsapp)
         setCountry(modalContent.country)
+        setWhatsappAudio(modalContent.caudioUrl)
         setEdit(true);
     }
 
@@ -48,6 +54,39 @@ export default function User(props){
         setUsers(props.users)
     }, [props.users])
 
+    //Upload the Consultation audio to S3
+    const uploadAudio = (e) => {
+        const s3 = new AWS.S3({
+            params: { Bucket: process.env.AWS_BUCKET},
+            region: process.env.AWS_REGION,
+        })
+        const uploadParams = {
+            Key : `caudio/${modalContent.userCode}.mp3`,
+            Body : e.target.files[0],
+            Bucket : process.env.AWS_BUCKET
+          }
+          s3.upload(uploadParams,(err,res) =>{
+            if(err)
+            {
+                console.error(err)
+            }
+            else{
+                setForwardWhatsapp(true)
+                setWhatsappAudio(res.Location)
+            }
+        }).on('httpUploadProgress', (evt) => {
+            setAudioprogress(Math.round((evt.loaded / evt.total) * 100))
+        })
+    }
+
+    useEffect(() => {
+        if(!edit)
+        {
+            setAudioprogress(false);
+        }
+    }, [edit])
+
+    //Save All Changes in User Details
     const saveChange = async () => {
         var userTemp=users
         userTemp[index]={
@@ -65,7 +104,10 @@ export default function User(props){
             email:email,
             phone:phone,
             country:country,
-            userCode: modalContent.userCode
+            userCode: modalContent.userCode,
+            whatsapp: whatsapp,
+            caudio: whatappAudioUrl,
+            sendWhatsApp: whatsappForward
         }
         const response = await axiosPrivate.post('update/user', userTemp[index]);
         if(response.status == 200 && response.data=="Success")
@@ -109,8 +151,6 @@ export default function User(props){
             }
         }, [alert])
 
-    
-     
     return (
         <>
             <div className='container'>
@@ -267,6 +307,25 @@ export default function User(props){
                                 <input className='form-control' value={phone} onChange={(e) => setPhone(e.target.value)} required/>  
                             </div>
                         </div>
+                        <div className='row p-2'>
+                            <div className='col'>
+                                <label>Whats App Number</label><span className='text-danger'>*</span>
+                                <input className='form-control' value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required/>  
+                            </div>
+                        </div>
+                        <div className='row p-2'>
+                            <label>New Whats App Audio</label>
+                            <div className='input-group'>
+                                <input type="file" class="form-control" placeholder="Audio File" aria-label="Username" onChange={uploadAudio} aria-describedby="addon-wrapping"/>
+                            </div>
+                            {//Loading progress bar
+                                    audioProgress > 0?
+                                    <div className="progress">
+                                        <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${audioProgress}%`}} aria-valuenow={audioProgress} aria-valuemin="0" aria-valuemax="100">{`${audioProgress}%`}</div>
+                                    </div>
+                                    : ""
+                                }
+                        </div>
                     </div>
                     : 
                     <div className="modal-body">
@@ -320,7 +379,20 @@ export default function User(props){
                             <div className='col'>
                             Phone : <a href={"tel:"+modalContent.phone}>{modalContent.phone}</a>
                             </div>
-                        </div>  
+                        </div>
+                        <div className='row p-2'>
+                        {
+                            modalContent.caudioUrl?
+                            <audio controls>
+                                <source src={modalContent.caudioUrl}/>
+                                Your browser does not support the audio element.
+                            </audio>
+                            :
+                            <div className='col'>
+                            Edit and upload consultation audio
+                            </div>
+                        } 
+                        </div> 
                     </div>
                     }
                     
