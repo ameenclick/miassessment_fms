@@ -1,10 +1,12 @@
 import React, { useEffect, useState }  from 'react';
 import Search from './Search';
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
+import useAuth from '../hooks/useAuth';
 
 export default function User(props){
     const [users, setUsers]=useState(props.users)
     const [modalContent, setModalContent]=useState(users?.length>0?users[0]:undefined)
+    const { auth } = useAuth();
     const [edit, setEdit]=useState(false)
     const [userCode, setusercode]=useState()
     const [name, setName]=useState()
@@ -18,11 +20,15 @@ export default function User(props){
     const [address, setAddress]=useState()
     const [email, setEmail]=useState()
     const [phone, setPhone]=useState()
+    const [whatsapp, setWhatsapp]=useState()
     const [country, setCountry]=useState()
     const [index, setIndex]=useState(0)
     const [alert, setAlert]=useState(false)
     const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
     const [filter, setFilter] = useState("")
+    const [whatappAudioUrl, setWhatsappAudio] = useState("");
+    const [whatsappForward, setForwardWhatsapp] = useState(false);
+    const [audioProgress, setAudioprogress] = useState(0);
     const axiosPrivate = useAxiosPrivate();
 
     const makeChange = () =>{
@@ -38,7 +44,9 @@ export default function User(props){
         setAddress(modalContent.address)
         setEmail(modalContent.email)
         setPhone(modalContent.phone)
+        setWhatsapp(modalContent.whatsapp)
         setCountry(modalContent.country)
+        setWhatsappAudio(modalContent.caudioUrl)
         setEdit(true);
     }
 
@@ -46,6 +54,39 @@ export default function User(props){
         setUsers(props.users)
     }, [props.users])
 
+    //Upload the Consultation audio to S3
+    const uploadAudio = (e) => {
+        const s3 = new AWS.S3({
+            params: { Bucket: process.env.AWS_BUCKET},
+            region: process.env.AWS_REGION,
+        })
+        const uploadParams = {
+            Key : `caudio/${modalContent.userCode}.mp3`,
+            Body : e.target.files[0],
+            Bucket : process.env.AWS_BUCKET
+          }
+          s3.upload(uploadParams,(err,res) =>{
+            if(err)
+            {
+                console.error(err)
+            }
+            else{
+                setForwardWhatsapp(true)
+                setWhatsappAudio(res.Location)
+            }
+        }).on('httpUploadProgress', (evt) => {
+            setAudioprogress(Math.round((evt.loaded / evt.total) * 100))
+        })
+    }
+
+    useEffect(() => {
+        if(!edit)
+        {
+            setAudioprogress(false);
+        }
+    }, [edit])
+
+    //Save All Changes in User Details
     const saveChange = async () => {
         var userTemp=users
         userTemp[index]={
@@ -63,7 +104,10 @@ export default function User(props){
             email:email,
             phone:phone,
             country:country,
-            userCode: modalContent.userCode
+            userCode: modalContent.userCode,
+            whatsapp: whatsapp,
+            caudio: whatappAudioUrl,
+            sendWhatsApp: whatsappForward
         }
         const response = await axiosPrivate.post('update/user', userTemp[index]);
         if(response.status == 200 && response.data=="Success")
@@ -107,8 +151,6 @@ export default function User(props){
             }
         }, [alert])
 
-    
-     
     return (
         <>
             <div className='container'>
@@ -122,14 +164,19 @@ export default function User(props){
                     <div className='col-lg-9'>
                         <div className="input-group mb-3">
                             <Search id={"searchCol"} keyword={"user"} mainTag={"tbody"} searchTag={"tr"} innerTag={"td"} colIndex={1}/>
+                            {auth?.user?.admin_access == 1?
                             <select className="form-select form-select-lg" onChange={(e) => {setFilter(e.target.value)}} aria-label=".form-select example">
-                                <option defaultValue="">Show all</option>
+                                <option value="">Show all</option>
+                                <option value="MI_APP">MI_APP</option>
                                 {
-                                    props.franchises.map((franchise,index) =>
+                                    props?.franchises?.map((franchise,index) =>
                                     <option key={index} value={franchise.franchiseCode}>{franchise.franchiseCode}</option>
                                     )
                                 }
                             </select>
+                            
+                            : ""}
+                            
                         </div>
                     </div>
                     :""
@@ -137,42 +184,44 @@ export default function User(props){
                 <hr/>
                 {
                 users?.length!=0?
-                <table className="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Code</th>
-                        <th scope="col">User Name</th>
-                        <th scope="col">Franchise</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {
-                users?.map( (user, index)=>
-                filter=="" || filter == user.franchiseCode?
-                    <tr key={index} onClick={() => {setModalContent(users[index]); setIndex(index)}}>
-                    <th scope="row">{index+1}</th>
-                    <td data-bs-toggle="modal" data-bs-target="#userDetails">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person" viewBox="0 0 16 16">
-                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
-                        </svg>
-                        {user.userCode}
-                    </td>
-                    <td data-bs-toggle="modal" data-bs-target="#userDetails">{user.name}</td>
-                    <td>{user.franchiseCode? user.franchiseCode: "MI_APP"}</td>
-                    <td>
-                        <a href={user.report_url} target="_blank" className='btn btn-primary'>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-file-earmark-bar-graph" viewBox="0 0 16 16">
-                                <path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v6zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-1z"/>
-                                <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
-                            </svg> Report
-                        </a>    
-                    </td>
-                    </tr>
-                : ""
-                )}
-                </tbody>
-                </table>
+                <div style={{height: "100%", width: "100%", overflowY: "scroll"}}>
+                    <table className="table table-striped table-hover">
+                    <thead className='sticky-top bg-white'>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Code</th>
+                            <th scope="col">User Name</th>
+                            <th scope="col">Franchise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {
+                    users?.map( (user, index)=>
+                    filter=="" || filter == user.franchiseCode?
+                        <tr key={index} onClick={() => {setModalContent(users[index]); setIndex(index)}}>
+                        <th scope="row">{index+1}</th>
+                        <td data-bs-toggle="modal" data-bs-target="#userDetails">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person" viewBox="0 0 16 16">
+                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                            </svg>
+                            {user.userCode}
+                        </td>
+                        <td data-bs-toggle="modal" data-bs-target="#userDetails">{user.name}</td>
+                        <td>{user.franchiseCode? user.franchiseCode: "MI_APP"}</td>
+                        <td>
+                            <a href={user.report_url} target="_blank" className='btn btn-primary'>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-file-earmark-bar-graph" viewBox="0 0 16 16">
+                                    <path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v6zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-1z"/>
+                                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                                </svg> Report
+                            </a>    
+                        </td>
+                        </tr>
+                    : ""
+                    )}
+                    </tbody>
+                    </table>
+                </div>
                 :
                 <h2 className='text-center'>No users registered yet..</h2>
                 }
@@ -258,6 +307,25 @@ export default function User(props){
                                 <input className='form-control' value={phone} onChange={(e) => setPhone(e.target.value)} required/>  
                             </div>
                         </div>
+                        <div className='row p-2'>
+                            <div className='col'>
+                                <label>Whats App Number</label><span className='text-danger'>*</span>
+                                <input className='form-control' value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} required/>  
+                            </div>
+                        </div>
+                        <div className='row p-2'>
+                            <label>New Whats App Audio</label>
+                            <div className='input-group'>
+                                <input type="file" class="form-control" placeholder="Audio File" aria-label="Username" onChange={uploadAudio} aria-describedby="addon-wrapping"/>
+                            </div>
+                            {//Loading progress bar
+                                    audioProgress > 0?
+                                    <div className="progress">
+                                        <div className="progress-bar progress-bar-striped" role="progressbar" style={{width: `${audioProgress}%`}} aria-valuenow={audioProgress} aria-valuemin="0" aria-valuemax="100">{`${audioProgress}%`}</div>
+                                    </div>
+                                    : ""
+                                }
+                        </div>
                     </div>
                     : 
                     <div className="modal-body">
@@ -311,12 +379,25 @@ export default function User(props){
                             <div className='col'>
                             Phone : <a href={"tel:"+modalContent.phone}>{modalContent.phone}</a>
                             </div>
-                        </div>  
+                        </div>
+                        <div className='row p-2'>
+                        {
+                            modalContent.caudioUrl?
+                            <audio controls>
+                                <source src={modalContent.caudioUrl}/>
+                                Your browser does not support the audio element.
+                            </audio>
+                            :
+                            <div className='col'>
+                            Edit and upload consultation audio
+                            </div>
+                        } 
+                        </div> 
                     </div>
                     }
                     
                     <div className="modal-footer">
-                        { users?.admin_access == 1 ?
+                        { auth?.user?.admin_access == 1 ?
                         <a href={`${process.env.host}user/quiz/response/${modalContent.userCode}`} className="me-auto" target="_blank">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-download" viewBox="0 0 16 16">
                                 <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
