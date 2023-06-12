@@ -125,7 +125,7 @@ export default function Franchises(props){
         const s3 = new AWS.S3();
         const uploadParams = {
             Bucket : process.env.AWS_BUCKET,
-            Key : `franchises/${fileCategory}/${filename}`,
+            Key : `franchises/${fileCategory}/${Math.floor(Math.random() * 20)+filename}`,
             Body : file,
           }
         s3.upload(uploadParams,(err,res) =>{
@@ -168,7 +168,6 @@ export default function Franchises(props){
     //Checking the brand cover dependencies matching the creteria
     function validateSelectedFile(event,maxLength, Width, Height,fileCategory){
         var selectedFile = event.target.files[0]
-        //console.log(selectedFile)
         const MAX_FILE_SIZE = maxLength // KB
     
         const fileSizeKiloBytes = selectedFile?.size / 1024
@@ -184,11 +183,10 @@ export default function Franchises(props){
                 return
             }
             else{
-                //console.log("Uploading")              
-                if(edit && imageUrl[fileCategory] != null)
+             
+                if(edit && imageUrl[fileCategory])
                 {
-                    //console.log(imageUrl[fileCategory].split(fileCategory+"/")[1])
-                    updateS3(fileCategory,imageUrl[fileCategory].split(fileCategory+"/")[1], selectedFile)
+                    updateS3(fileCategory,selectedFile.name, selectedFile)
                 } 
                 else uploadS3(fileCategory,selectedFile.name, selectedFile)
             }
