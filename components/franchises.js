@@ -3,15 +3,10 @@ import React, { useState,useEffect }  from 'react';
 import NewUser from './NewUser';
 import Search from './Search';
 import useAxiosPrivate from '../hooks/useAxiosPrivate';
-// import Preview from './Preview';
-AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY
-})
 
 
 export default function Franchises(props){
-    const [franchises, setFranchises] = useState(props.franchises)
+    const [franchises, setFranchises] = useState(props.franchises) // List of all franchises stored and managed
     const [modalContent, setModalContent]= useState({ company: "", client_name: "", address: "", website: "", email: "", phone: "", designation:"", logo_url:"", cover1: "", cover2: "", backcover: "", branding: false})
     const [edit, setEdit]=useState(false)
     const [company,setCompany]=useState("")
@@ -33,6 +28,12 @@ export default function Franchises(props){
     const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
+        // Configure AWS SDK with your credentials and region
+        AWS.config.update({
+            accessKeyId: process.env.AWS_ACCESS_KEY,
+            secretAccessKey: process.env.AWS_SECRET_KEY,
+            region: process.env.AWS_REGION
+        })
         setFranchises(props.franchises)
     }, [])
 
@@ -53,18 +54,10 @@ export default function Franchises(props){
                  cover2: modalContent.cover2,
                  backcover: modalContent.backcover
             })
-            setBrand(modalContent.branding?true:false)
+            setBrand(modalContent.branding)
             setProgress({ logos: 0, backcover: 0, cover1: 0, cover2: 0})
         }
     }, [modalContent])
-
-    //Render Uploaded Image
-    // useEffect(() => {
-    //     if(logo)
-    //     {
-    //         setLogoSrc(URL.createObjectURL(logo))   
-    //     }
-    // }, [logo])
     
     //Update componenet on refresh
     useEffect(() => {
@@ -120,18 +113,20 @@ export default function Franchises(props){
                 setAlert(true);
             }
         })
-        
+        .catch(err => {
+            console.log(err)
+            setEdit(false)
+            setAlertmessage({message : "Server issue, try again later", type:"danger"});
+            setAlert(true);
+        })
     }
 
     function updateS3(fileCategory,filename,file){
-        const s3 = new AWS.S3({
-            params: { Bucket: process.env.AWS_BUCKET},
-            region: process.env.AWS_REGION,
-        })
+        const s3 = new AWS.S3();
         const uploadParams = {
+            Bucket : process.env.AWS_BUCKET,
             Key : `franchises/${fileCategory}/${filename}`,
             Body : file,
-            Bucket : process.env.AWS_BUCKET
           }
         s3.upload(uploadParams,(err,res) =>{
             if(err)
@@ -148,18 +143,17 @@ export default function Franchises(props){
     }
 
     function uploadS3(fileCategory,filename,file){
-        const s3 = new AWS.S3({
-            params: { Bucket: process.env.AWS_BUCKET},
-            region: process.env.AWS_REGION,
-        })
+        const s3 = new AWS.S3()
         const uploadParams = {
+            Bucket : process.env.AWS_BUCKET,
             Key : `franchises/${fileCategory}/${Math.floor(Math.random() * 20)+filename}`,
-            Body : file,
-            Bucket : process.env.AWS_BUCKET
+            Body : file
           }
         s3.upload(uploadParams,(err,res) =>{
             if(err)
             {
+                setAlertmessage({ message: "AWS Error : "+err, type: "warning"});
+                setAlert(true)
                 console.error(err)
             }
             else{
@@ -171,8 +165,10 @@ export default function Franchises(props){
 
     }
 
+    //Checking the brand cover dependencies matching the creteria
     function validateSelectedFile(event,maxLength, Width, Height,fileCategory){
         var selectedFile = event.target.files[0]
+        //console.log(selectedFile)
         const MAX_FILE_SIZE = maxLength // KB
     
         const fileSizeKiloBytes = selectedFile?.size / 1024
@@ -188,11 +184,10 @@ export default function Franchises(props){
                 return
             }
             else{
-                console.log("Uploading")
-                
+                //console.log("Uploading")              
                 if(edit && imageUrl[fileCategory] != null)
                 {
-                    console.log(imageUrl[fileCategory].split(fileCategory+"/")[1])
+                    //console.log(imageUrl[fileCategory].split(fileCategory+"/")[1])
                     updateS3(fileCategory,imageUrl[fileCategory].split(fileCategory+"/")[1], selectedFile)
                 } 
                 else uploadS3(fileCategory,selectedFile.name, selectedFile)
@@ -202,13 +197,14 @@ export default function Franchises(props){
         setImageStatus({ ...imageStatus, [fileCategory]: ""})
         };
 
+    //Create new franchise account
     function createFranchiseAccount(e){
         e.preventDefault()
         if(brand)
         {
              if(!imageUrl.logos)
              {
-                 setAlertmessage({ message: "You should click upload", type: "warning"});
+                 setAlertmessage({ message: "Images are missing", type: "warning"});
                  setAlert(true)
                  return
              }
@@ -227,6 +223,7 @@ export default function Franchises(props){
             backcover: imageUrl.backcover,
             branding: brand
         }
+        //console.log(details);
         axiosPrivate.post("register/franchise",details)
         .then(response => {
                 setAlertmessage({ message: "New franchise created", type: "success"});
@@ -238,13 +235,14 @@ export default function Franchises(props){
         .catch(error => { 
             if(error.response.status == 409)
             {
-                setAlertmessage({ message: "Duplicate entry...", type: "danger"});
+                setAlertmessage({ message: "Duplicate entry : "+error.message, type: "danger"});
             }
             else setAlertmessage({ message: "Something wrong with server, try later..", type: "danger"});
         })
         setAlert(true)
     }
 
+    //Fetch all non-sold codes
      function getUnsold(code)
      {
         axiosPrivate.get(`unsold/codes/${code}`)
@@ -282,6 +280,7 @@ export default function Franchises(props){
         })
     }
 
+    //Delete a unwanted code accidently created
     function deleteCode(code){
         if(confirm(`Do you want to delete ${code}`))
         {
@@ -316,6 +315,7 @@ export default function Franchises(props){
         
     }
 
+    //Reset password for a franchise account incase they forget
     function resetPassword(email,company)
     {
         const url = `reset/password/${email}`
@@ -348,19 +348,19 @@ export default function Franchises(props){
                     }
                 </div>
                 <div className='col mb-1'>
-                    <button className='btn btn-primary float-end' data-bs-toggle="modal" data-bs-target="#createFranchise" onClick={() => setModalContent(
-                                                                                                                            {   company: "",
-                                                                                                                                client_name: "",
-                                                                                                                                address: "",
-                                                                                                                                website: "",
-                                                                                                                                email: "",
-                                                                                                                                phone: "",
-                                                                                                                                designation:"",
-                                                                                                                                logo_url:"",
-                                                                                                                                 cover1: "",
-                                                                                                                                  cover2: "",
-                                                                                                                                   backcover: "",
-                                                                                                                                    branding: false})}>
+                    <button className='btn btn-primary float-end' data-bs-toggle="modal" data-bs-target="#createFranchise" 
+                    onClick={() => setModalContent({   company: "",
+                                                       client_name: "",
+                                                       address: "",
+                                                       website: "",
+                                                       email: "",
+                                                       phone: "",
+                                                      designation:"",
+                                                      logo_url:"",
+                                                      cover1: "",
+                                                       cover2: "",
+                                                      backcover: "",
+                                                      branding: false})}>
                         <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" className="bi bi-plus-circle-fill" viewBox="0 0 16 16">
                                 <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
                         </svg>    Create
@@ -422,7 +422,7 @@ export default function Franchises(props){
                 
             </div>
             
-            {/* Details Modal */
+            {/* Franchise Details Modal & Editable */
             modalContent?
             <div className="modal fade" id="franchiseDetails" tabIndex="-1" aria-labelledby="franchiseDetailsLabel" aria-hidden="true">
                 <div className="modal-dialog">
@@ -495,7 +495,7 @@ export default function Franchises(props){
                         </div>
                                 <div className='row'>
                                 <div className='col'>
-                                    <label className="form-check-label" for="brandUser">Enable branded user reports for this franchise.</label>
+                                    <label className="form-check-label" htmlFor="brandUser">Enable branded user reports for this franchise.</label>
                                     <div className="form-check form-switch">
                                         <input className="form-check-input" style={{ height: "25px", width: "70px"}} onChange={() => { setBrand(!brand) }} type="checkbox" role="switch" id="brandUser" checked={brand}/>
                                     </div>
@@ -504,13 +504,16 @@ export default function Franchises(props){
                                     <div className='col-lg-12 my-2'>
                                         <label>
                                             Brand Logo (3049 x 2639) Max: 500kb 
-                                            {progress.logos === 100?
+                                            {progress.logos === 100 &&
                                             <span className='text-success fw-bolder ps-3'>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
                                                     <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
                                                 </svg> Good
-                                            </span>
-                                            : ""}
+                                            </span>}
+                                            {
+                                                imageUrl?.logos?
+                                                " (Replace Existing Logo)" :""
+                                            }
                                         </label>
                                         <div className='input-group'>
                                             <input name="logos" type="file" className='form-control form-control-lg' onChange={(e) =>{ validateSelectedFile(e, 500, 3049, 2639,'logos');}} id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
@@ -533,13 +536,16 @@ export default function Franchises(props){
                                     <div className='col-lg-12 my-2'>
                                         <label>
                                             Back Cover (383 x 389) Max: 50kb
-                                            {progress.backcover === 100?
+                                            {progress.backcover === 100 &&
                                             <span className='text-success fw-bolder ps-3'>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
                                                     <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
                                                 </svg> Good
-                                            </span>
-                                            : ""}
+                                            </span>}
+                                            {
+                                                imageUrl?.backcover?
+                                                " (Replace Existing Backcover)" :""
+                                            }
                                         </label>
                                         <div className='input-group'>
                                             <input name="backcover" type="file" className='form-control form-control-lg' onChange={(e) =>{ validateSelectedFile(e, 50, 383, 389, 'backcover')} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
@@ -559,13 +565,17 @@ export default function Franchises(props){
                                     <div className='col-lg-12 my-2'>
                                         <label>
                                             Cover Image Top (812 X 369) Max: 100kb
-                                            {progress.cover1 === 100?
+                                            {progress.cover1 === 100 &&
                                             <span className='text-success fw-bolder ps-3'>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
                                                     <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
                                                 </svg> Good
                                             </span>
-                                            : ""}
+                                            }
+                                            {
+                                                imageUrl?.cover1?
+                                                " (Replace Existing Top Cover)" :""
+                                            }
                                         </label>
                                         <div className='input-group'>
                                             <input name="cover1" type="file" className='form-control form-control-lg'  onChange={(e) =>{ validateSelectedFile(e, 100, 812, 369, "cover1");} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
@@ -581,17 +591,21 @@ export default function Franchises(props){
                                     </div>
                                     : ""
                                 }
-                                {  imageUrl?.cover1 || brand?
+                                {  imageUrl?.cover2 || brand?
                                     <div className='col-lg-12 my-2'>
                                         <label>
                                             Cover Image Bottom (812 X 546) Max: 200kb
-                                            {progress.cover2 === 100?
+                                            {progress.cover2 === 100 &&
                                             <span className='text-success fw-bolder ps-3'>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
                                                     <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
                                                 </svg> Good
                                             </span>
-                                            : ""}
+                                            }
+                                            {
+                                                imageUrl?.cover2?
+                                                " (Replace Existing Bottom Cover)" :""
+                                            }
                                         </label>
                                         <div className='input-group'>
                                             <input name="cover2" type="file" className='form-control form-control-lg'  onChange={(e) =>{ validateSelectedFile(e, 200,812, 546, "cover2");} } id='customeLogo' title='Recommended: .jpeg, .jpg, .png' accept='.jpeg, .jpg, .png'/>
@@ -676,7 +690,7 @@ export default function Franchises(props){
                 </div>
             </div>
             :"" }
-            {/* Create New Modal */}
+            {/* Create New Franchise Modal */}
             <div className="modal fade" id="createFranchise" tabIndex="-1" aria-labelledby="createFranchiseLabel" aria-hidden="true">
             <div className="modal-dialog modal-xl">
                 <div className="modal-content">
@@ -759,9 +773,9 @@ export default function Franchises(props){
                                     <input name="phone" type="number" pattern='[0-9]+{7,20}$' title='Mandatory field' onChange={(e) => setPhone(e.target.value)} value={phone} className='form-control form-control-lg' placeholder="Enter phone" required/>
                                 </div>
                                 <div className='col'>
-                                    <label className="form-check-label" for="brandUser">Enable branded user reports for this franchise.</label>
+                                    <label className="form-check-label" htmlFor="brandUser">Enable branded user reports for this franchise.</label>
                                     <div className="form-check form-switch">
-                                        <input className="form-check-input" style={{ height: "25px", width: "70px"}} onChange={() => { setBrand(!brand) }} type="checkbox" role="switch" id="brandUser"/>
+                                        <input className="form-check-input" style={{ height: "25px", width: "70px"}} onChange={() => { setBrand(!brand) }} checked={brand} type="checkbox" role="switch" id="brandUser"/>
                                     </div>
                                 </div>
                             </div>
