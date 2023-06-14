@@ -25,6 +25,7 @@ export default function Franchises(props){
     const [imageStatus, setImageStatus] = useState({ logos: "", backcover: "", cover1: "", cover2: ""})
     const [brand, setBrand] = useState(false)
     const [Unsold, setUnsold] = useState(undefined)
+    const [unsoldExcel, setUnsoldexcel] = useState(null);
     const axiosPrivate = useAxiosPrivate();
 
     useEffect(() => {
@@ -246,6 +247,7 @@ export default function Franchises(props){
         axiosPrivate.get(`unsold/codes/${code}`)
         .then(res => {
             setUnsold(res.data)
+            setUnsoldexcel(`${process.env.host}/unsold/download/${code}`)
         })
         .catch(err =>{ 
             console.error(err)
@@ -909,6 +911,7 @@ export default function Franchises(props){
                         Unsold.length==0 ?
                         <h3>No Code To Sell</h3>
                         :
+                        <div style={{maxHeight: 380, overflowY: "auto", scroll: "true"}}>
                         <ul className="list-group">
                             { Unsold.map((val, i) =>         
                                 <li className="list-group-item text-center" key={i}>
@@ -922,6 +925,7 @@ export default function Franchises(props){
                                 </li> )
                             }
                         </ul>
+                        </div>
                     :
                         <div className="d-flex justify-content-center m-5 p-5">
                             <div className="spinner-border p-4" role="status">
@@ -948,6 +952,12 @@ export default function Franchises(props){
                     </div>     
                         : ""}
                 <div className="modal-footer">
+                    <a className='btn btn-outline-primary me-auto' href={unsoldExcel} target='_blank'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                        </svg> Excel
+                    </a>
                     <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
                 </div>
