@@ -185,10 +185,10 @@ export default function User(props){
                 <hr/>
                 {
                 users?.length!=0?
-                <div style={{height: "100%", width: "100%", overflowY: "scroll"}}>
+                <div style={{maxHeight: 300, overflowY: "auto"}}>
                     <table className="table table-striped table-hover">
                     <thead className='sticky-top bg-white'>
-                        <tr>
+                        <tr className='sticky-top'>
                             <th scope="col">#</th>
                             <th scope="col">Code</th>
                             <th scope="col">User Name</th>

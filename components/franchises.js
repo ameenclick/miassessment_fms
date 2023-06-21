@@ -378,9 +378,10 @@ export default function Franchises(props){
                             <a className={account?"nav-link":"nav-link active"} href="#" onClick={() => setAccount(false)}>Revoked</a>
                         </li>
                     </ul>
+                    <div style={{maxHeight: 300, overflowY: "auto"}}>
                         <table className="table table-striped table-hover">
                         <thead>
-                            <tr>
+                            <tr className='sticky-top'>
                                 <th scope="col">Code</th>
                                 <th scope="col">Client Name</th>
                                 <th scope="col">Company</th>
@@ -417,6 +418,7 @@ export default function Franchises(props){
                             }           
                         </tbody>
                         </table>
+                    </div>
                     </>
                 }
                 
