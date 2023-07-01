@@ -1,28 +1,47 @@
 
-import React, { useState }  from 'react';
+import useAxiosPrivate from '../hooks/useAxiosPrivate';
+import React, { useEffect, useState }  from 'react';
+import Alert from './alert';
 import Footer from './footer';
-import NewUserModal from './NewUserModal';
 
-function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass, setuserClass}) {
+function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass, setuserClass, franchises, User}) {
 
-   //const [userNo, setUserno] = useState(userno);
-   const [Franchises,setFranchises] = useState();
-   const [choosenFranchise, setChoosenfranchise] = useState(null);
+   const [UnsoldCount,setUnsoldCount] = useState(undefined);
+   const [Unsold,setUnsold] = useState(undefined);
+   const [alert, setAlert]=useState(false)
+   const [alertMessage,setAlertmessage]=useState({ message :"", type: ""})
+   const axiosPrivate = useAxiosPrivate();
 
+   useEffect(() => {
+        if(Unsold==undefined)
+        {
+            try{
+            axiosPrivate.get(`unsold/codes/${User.franchiseCode}`)
+            .then(res => {
+                setUnsoldCount(res.data.length)
+                setUnsold(res.data)
+            })
+        } catch(error){ 
+                console.error(error.data)
+                setAlertmessage({ message: error.data? error.data:"Something wrong with server, unable to show unsold..", type: "danger"});
+                setAlert(true)
+            }
+        }
+   }, [Unsold])
 
   return (
       <>
         <div className="container p-5">
             <div className='row'>
-                <h3>Welcome Paul Malieckal</h3>
+                <h3>Welcome {User?.client_name}  {(UnsoldCount && User?.admin_access===1)?<button className="btn btn-outline-warning rounded-pill fs-6" data-bs-toggle="modal" data-bs-target="#unsold">{UnsoldCount} Unsold</button>:""}</h3>
                 <hr/>
             </div>
             <div className="row align-items-center justify-content-center text-center">
                 <button className="col-lg-3 mx-2 my-3 btn btn-outline-primary py-3" onClick={() => {setuserClass(true);  setdashboardClass(false)}}>
                         <div className='row align-items-start'>
                             <div className="col">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" className="bi bi-person" viewBox="0 0 16 16">
-                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" className="bi bi-person-fill" viewBox="0 0 16 16">
+                                    <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
                                 </svg>
                             </div>
                             <div className="col">
@@ -30,9 +49,11 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
                                 <h3 className="card-title">{userNo}</h3>
                             </div>
                         </div>
-                        {/* <a href="#" className="btn btn-primary">Go somewhere</a> */}
                 </button>
-                <button className="col-lg-3 mx-2 my-3 btn btn-outline-primary py-3" onClick={() => {setfranchiseClass(true); setdashboardClass(false)}}>
+                {
+                    User?.admin_access==1?
+                    <>
+                    <button className="col-lg-3 mx-2 my-3 btn btn-outline-primary py-3" onClick={() => {setfranchiseClass(true); setdashboardClass(false)}}>
                         <div className='row align-items-start'>
                             <div className="col">
                                 <svg xmlns="http://www.w3.org/2000/svg"  width="70" height="70" fill="currentColor" viewBox="0 0 640 512">
@@ -44,22 +65,58 @@ function Dashboard({userNo, franchiseCount, setfranchiseClass, setdashboardClass
                                 <h3 className="card-title">{franchiseCount}</h3>
                             </div>
                         </div>
-                </button>
-                <button className="col-lg-4 mx-2 my-3 btn btn-outline-primary py-3"  data-bs-toggle="modal" data-bs-target="#newUserModal">
-                        <div className='row align-items-center'>
+                    </button>
+                    </>
+                    :
+                    <button className="col-lg-3 mx-2 my-3 btn btn-outline-warning py-3"  data-bs-toggle="modal" data-bs-target="#unsold">
+                        <div className='row align-items-start' >
                             <div className="col">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" className="bi bi-plus-circle-fill" viewBox="0 0 16 16">
-                                <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8.5 4.5a.5.5 0 0 0-1 0v3h-3a.5.5 0 0 0 0 1h3v3a.5.5 0 0 0 1 0v-3h3a.5.5 0 0 0 0-1h-3v-3z"/>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="currentColor" className="bi bi-collection" viewBox="0 0 16 16">
+                            <path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1h-11zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1h-7zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6v7zm1.5.5A.5.5 0 0 1 1 13V6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5h-13z"/>
                                 </svg>
                             </div>
                             <div className="col">
-                                <h5>Generate Codes</h5>
+                                <h5>Unsold</h5>
+                                <h3 className="card-title">{UnsoldCount}</h3>
                             </div>
                         </div>
-                </button>
+                    </button>
+                }
+
             </div>
         </div>
-        <NewUserModal />
+        {/* Unsold  */}
+        <div className="modal fade" id="unsold" tabIndex="-1" aria-labelledby="unsoldModalLabel" aria-hidden="true">
+            <div className="modal-dialog">
+                <div className="modal-content">
+                <div className="modal-header">
+                    <h5 className="modal-title" id="unsoldModalLabel">Unsold Codes</h5>
+                    <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div className="modal-body">
+                    { Unsold? 
+                        Unsold.length==0 ?
+                        <h3>No Code To Sell</h3>
+                        :
+                        <ul className="list-group">
+                            { Unsold.map((val, i) => <li className="list-group-item text-center" key={i}>{val.userCode}</li> )
+                            }
+                        </ul>
+                    :
+                        <div className="d-flex justify-content-center m-5 p-5">
+                            <div className="spinner-border p-4" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+                </div>
+            </div>
+        </div>
+        <Alert message={alertMessage.message} type={alertMessage.type} alert={alert} setAlert={setAlert}/> 
         <Footer />
       </>
   );

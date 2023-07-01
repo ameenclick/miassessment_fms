@@ -1,11 +1,9 @@
-import Head from 'next/head'
 import styles from "../styles/search.module.css"
 
 export default function Search(props){
 
     function mySearch(input) {
         var input, filter, parant, rowTag, searchTag, i, txtValue;
-        //input = document.getElementById("myInput");
         filter = input.toUpperCase();
         parant = document.getElementsByTagName(props.mainTag)[0];
         rowTag = parant.getElementsByTagName(props.searchTag);
@@ -22,7 +20,7 @@ export default function Search(props){
 
     return(
         <>
-            <input type="text" id={styles.myInput} onChange={(e) => {e.preventDefault(); mySearch(e.target.value)}} placeholder={"Search "+props.keyword+" here.."} title="Type in a name"></input>
+            <input className="form-control form-control-lg" type="text" id={styles.myInput} onChange={(e) => {e.preventDefault(); mySearch(e.target.value)}} placeholder={"Search "+props.keyword+" here.."} title="Type in a name"></input>
         </>
     )
 }
